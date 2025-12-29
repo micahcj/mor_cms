@@ -17,6 +17,7 @@
 		{ text: 'shid1', indentValue: 'Main', id: crypto.randomUUID() },
 		{ text: 'shid2', indentValue: 'Main', id: crypto.randomUUID() }
 	]);
+	let listEle: HTMLUListElement = $state();
 
 	function addTextObj(index: number) {
 		const insertIndex = index + 1;
@@ -38,7 +39,18 @@
 
 	$effect(() => {
 		resultText = serializeContent(textObjs);
+		if (listEle) {
+			console.log(listEle.innerHTML);
+		}
 	});
+
+	function dlJson() {
+		const data = JSON.stringify(resultText);
+		const dlEle = document.createElement('a');
+		dlEle.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(data));
+		dlEle.setAttribute('download', 'resultText.json');
+		dlEle.click();
+	}
 
 	// ^^ turn that into a store.
 	/*TODO
@@ -70,10 +82,8 @@
 	{/each}
 </ul>
 <div class="result-text">
-	<!-- <button onclick={() => (resultText = serializeContent(textObjs))}>DewIt!</button> -->
 	<h3>Result Text:</h3>
-	<!-- <pre>{resultText}</pre> -->
-	<ul>
+	<ul class="listEle" bind:this={listEle}>
 		{#each resultText as item}
 			{#if Array.isArray(item)}
 				<ul>
@@ -86,6 +96,12 @@
 			{/if}
 		{/each}
 	</ul>
+	<p>{JSON.stringify(resultText)}</p>
+	{#if listEle}
+		<p>{listEle.innerHTML}</p>
+		<p>{listEle.outerHTML}</p>
+	{/if}
+	<button onclick={dlJson}>Save JSON</button>
 </div>
 
 <style>
