@@ -83,7 +83,8 @@
 	}
 
 	.main {
-		font-weight: 700;
+		font-weight: 500;
+		font-size: medium;
 	}
 
 	.bullet {

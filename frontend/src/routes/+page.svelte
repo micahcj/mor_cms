@@ -1,47 +1,91 @@
 <script lang="ts">
 	import TextButton from '$lib/Components/TextButton.svelte';
-	import { indentValues, type IndentValue, type TextObject } from '$lib/static_resources';
+	import {
+		indentValues,
+		serializeContent,
+		type IndentValue,
+		type TextObject
+	} from '$lib/static_resources';
 
+	let resultText: Array<string | string[]> = $state([]);
+
+	function createTextObj(): TextObject {
+		return { ...defaultTextObj, id: crypto.randomUUID() };
+	}
 	const defaultTextObj: TextObject = { text: 'default', indentValue: 'Main' };
 	let textObjs: TextObject[] = $state([
-		{ text: 'shid1', indentValue: 'Main' },
-		{ text: 'shid2', indentValue: 'Main' }
+		{ text: 'shid1', indentValue: 'Main', id: crypto.randomUUID() },
+		{ text: 'shid2', indentValue: 'Main', id: crypto.randomUUID() }
 	]);
 
 	function addTextObj(index: number) {
 		const insertIndex = index + 1;
-		textObjs = [...textObjs.slice(0, insertIndex), defaultTextObj, ...textObjs.slice(index, -1)];
+
+		textObjs = [...textObjs.slice(0, insertIndex), createTextObj(), ...textObjs.slice(insertIndex)];
 	}
 	function removeTextObj(index: number) {
-		if (textObjs.length < 2) {
-			// alert('FUTURE');
+		if (textObjs.length <= 1) {
 			return;
 		}
-		textObjs.splice(index);
+		textObjs = [...textObjs.slice(0, index), ...textObjs.slice(index + 1)];
 	}
 
-	//^^ turn that into a store.
+	$effect(() => {
+		console.log('state changed');
+		console.log($state.snapshot(textObjs));
+		console.log('serialized effect', serializeContent(textObjs));
+	});
+
+	$effect(() => {
+		resultText = serializeContent(textObjs);
+	});
+
+	// ^^ turn that into a store.
 	/*TODO
-forEach textele push to array after completion
-or reform array after each modification. 
-queryselectorall?
-onchange?
-*/
+	forEach textele push to array after completion
+	or reform array after each modification. 
+	queryselectorall?
+	onchange?
+	*/
 </script>
 
 <h1>Welcome to SvelteKit</h1>
 <p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
 
-<div class="content" onchange={() => console.log($state.snapshot(textObjs))}>
-	{#each textObjs as obj, i (i)}
+<ul
+	class="content"
+	onchange={() => {
+		console.log($state.snapshot(textObjs));
+		console.log('serialized', serializeContent(textObjs));
+	}}
+>
+	{#each textObjs as obj, i (obj.id)}
 		<div class="textbutton-container">
 			<div class="plus-minus">
 				<button onclick={() => addTextObj(i)}>+</button>
 				<button onclick={() => removeTextObj(i)}>-</button>
 			</div>
-			<TextButton text={obj.text} indentValue={obj.indentValue}></TextButton>
+			<TextButton bind:text={textObjs[i].text} bind:indentValue={textObjs[i].indentValue} />
 		</div>
 	{/each}
+</ul>
+<div class="result-text">
+	<!-- <button onclick={() => (resultText = serializeContent(textObjs))}>DewIt!</button> -->
+	<h3>Result Text:</h3>
+	<!-- <pre>{resultText}</pre> -->
+	<ul>
+		{#each resultText as item}
+			{#if Array.isArray(item)}
+				<ul>
+					{#each item as sub}
+						<li>{sub}</li>
+					{/each}
+				</ul>
+			{:else}
+				<li class="solo">{item}</li>
+			{/if}
+		{/each}
+	</ul>
 </div>
 
 <style>
@@ -73,5 +117,17 @@ onchange?
 		flex-direction: column;
 		gap: 2rem;
 		justify-content: left;
+	}
+
+	.result-text {
+		display: flex;
+		flex-direction: column;
+		font-family:
+			'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana,
+			sans-serif;
+	}
+	.result-text .solo {
+		gap: 0;
+		list-style: none;
 	}
 </style>
