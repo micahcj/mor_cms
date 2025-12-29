@@ -16,8 +16,14 @@ data = load_file()
 
 
 def process_json(data: list, indent=0):
+    def tag(val):
+        return f'<ul>{val}</ul>'
+
+    def nest_init(val):
+        return f'<ul>{val}</ul>'
+
     def help_print(val):
-        print(indent*'\t', val)
+        print(indent*'\t', tag(val))
     for item in data:
         if isinstance(item, list):
             process_json(item, indent+1)
