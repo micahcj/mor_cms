@@ -17,7 +17,7 @@ data = load_file()
 
 def process_json(data: list, indent=0):
     def tag(val):
-        return f'<ul>{val}</ul>'
+        return f'<li>{val}</li>'
 
     def nest_init(val):
         return f'<ul>{val}</ul>'
@@ -28,7 +28,11 @@ def process_json(data: list, indent=0):
         if isinstance(item, list):
             process_json(item, indent+1)
         else:
+            if indent:
+                print(indent*'\t', ('<ul>'))
             help_print(item)
+            if indent:
+                print(indent*'\t', ('</ul>'))
 
 
 process_json(data)
