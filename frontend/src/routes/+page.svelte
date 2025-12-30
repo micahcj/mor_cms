@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ListRenderer from '$lib/Components/ListRenderer.svelte';
 	import TextButton from '$lib/Components/TextButton.svelte';
 	import {
 		indentValues,
@@ -6,18 +7,21 @@
 		type IndentValue,
 		type TextObject
 	} from '$lib/static_resources';
+	import { exportListHtml } from '$lib/utilities';
+
+	const defaultTextObj: TextObject = { text: 'default', indentValue: 'Main' };
 
 	let resultText: Array<string | string[]> = $state([]);
-
-	function createTextObj(): TextObject {
-		return { ...defaultTextObj, id: crypto.randomUUID() };
-	}
-	const defaultTextObj: TextObject = { text: 'default', indentValue: 'Main' };
 	let textObjs: TextObject[] = $state([
 		{ text: 'shid1', indentValue: 'Main', id: crypto.randomUUID() },
 		{ text: 'shid2', indentValue: 'Main', id: crypto.randomUUID() }
 	]);
 	let listEle: HTMLUListElement = $state();
+	let nodes: Node[] = $derived(() => serializeContent(textObjs));
+
+	function createTextObj(): TextObject {
+		return { ...defaultTextObj, id: crypto.randomUUID() };
+	}
 
 	function addTextObj(index: number) {
 		const insertIndex = index + 1;
@@ -42,12 +46,15 @@
 		if (listEle) {
 			console.log(listEle.innerHTML);
 		}
+		console.log(nodes);
 	});
 
 	function dlJson() {
-		const data = JSON.stringify(resultText);
+		const data0 = JSON.stringify(resultText);
+		const data1 = JSON.stringify(exportListHtml(nodes()));
+		const finalData = { json: data0, htmk: data1 };
 		const dlEle = document.createElement('a');
-		dlEle.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(data));
+		dlEle.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(finalData));
 		dlEle.setAttribute('download', 'resultText.json');
 		dlEle.click();
 	}
@@ -103,6 +110,8 @@
 	{/if}
 	<button onclick={dlJson}>Save JSON</button>
 </div>
+<ListRenderer nodes={nodes()}></ListRenderer>
+<pre>{exportListHtml(nodes())}</pre>
 
 <style>
 	.plus-minus {

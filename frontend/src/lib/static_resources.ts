@@ -18,29 +18,37 @@ function isMainContent(obj: TextObject): boolean {
 }
 
 export function serializeContent(content: TextObject[]) {
-	const result: Array<string | string[]> = [];
+	const result: Array<Array<string | string[]>> = [];
 
-	let bullets: string[] = [];
+	let current: Array<string | string[]> | null = null;
+	let bullets: Array<string | string[]> = [];
 	let subBullets: string[] = [];
 
-	function flush() {
+	function flushBullets() {
 		if (subBullets.length) {
 			bullets.push(subBullets);
 			subBullets = [];
 		}
-		if (bullets.length) {
-			result.push(bullets);
+		if (bullets.length && current) {
+			current.push(bullets);
 			bullets = [];
 		}
 	}
 
 	for (const obj of content) {
 		if (isMainContent(obj)) {
-			flush();
-			result.push(obj.text);
+			// close previous main
+			if (current) {
+				flushBullets();
+				result.push(current);
+			}
+
+			// start new main group
+			current = [obj.text];
 			continue;
 		}
 
+		// bullet or sub-bullet
 		if (obj.indentValue === 'Bullet') {
 			if (subBullets.length) {
 				bullets.push(subBullets);
@@ -52,6 +60,11 @@ export function serializeContent(content: TextObject[]) {
 		}
 	}
 
-	flush();
+	// flush last main
+	if (current) {
+		flushBullets();
+		result.push(current);
+	}
+
 	return result;
 }

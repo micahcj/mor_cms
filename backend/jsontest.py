@@ -2,7 +2,12 @@ import json
 from pathlib import Path
 from typing import Collection
 
-filepath = Path('./test.json').absolute()
+
+def get_path(path: str) -> Path:
+    return Path(path).absolute()
+
+
+filepath = get_path('/Users/micah/Downloads/resultText(3).json')
 
 
 def load_file(filepath=filepath):
@@ -36,3 +41,5 @@ def process_json(data: list, indent=0):
 
 
 process_json(data)
+
+# functionally, contain every main in an li
