@@ -50,11 +50,9 @@
 	});
 
 	function dlJson() {
-		const data0 = JSON.stringify(resultText);
-		const data1 = JSON.stringify(exportListHtml(nodes()));
-		const finalData = { json: data0, htmk: data1 };
+		const data = JSON.stringify({ json: resultText, html: exportListHtml(nodes()) });
 		const dlEle = document.createElement('a');
-		dlEle.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(finalData));
+		dlEle.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(data));
 		dlEle.setAttribute('download', 'resultText.json');
 		dlEle.click();
 	}
