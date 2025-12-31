@@ -56,14 +56,6 @@
 		dlEle.setAttribute('download', 'resultText.json');
 		dlEle.click();
 	}
-
-	// ^^ turn that into a store.
-	/*TODO
-	forEach textele push to array after completion
-	or reform array after each modification. 
-	queryselectorall?
-	onchange?
-	*/
 </script>
 
 <h1>Welcome to SvelteKit</h1>
@@ -89,7 +81,7 @@
 <div class="result-text">
 	<h3>Result Text:</h3>
 	<ul class="listEle" bind:this={listEle}>
-		{#each resultText as item}
+		{#each resultText as item, i (i)}
 			{#if Array.isArray(item)}
 				<ul>
 					{#each item as sub}

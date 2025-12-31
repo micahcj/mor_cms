@@ -1,13 +1,17 @@
+from dataclasses import dataclass
 import json
 from pathlib import Path
 from typing import Collection
+
+from pydantic import BaseModel
 
 
 def get_path(path: str) -> Path:
     return Path(path).absolute()
 
 
-filepath = get_path('/Users/micah/Downloads/resultText(3).json')
+path = '/Users/micah/Documents/CodeMe/mor_cms/backend/test.json'
+filepath = get_path(path)
 
 
 def load_file(filepath=filepath):
@@ -40,6 +44,20 @@ def process_json(data: list, indent=0):
                 print(indent*'\t', ('</ul>'))
 
 
-process_json(data)
+@dataclass
+class ResultText:
+    json: dict[str, str | list[str]]
+    html: str
+
+
+class ResultTextBase(BaseModel):
+    json: dict[str, str | list[str]]
+    html: str
+
+
+if __name__ == "__main__":
+    process_json(data)
+    print(ResultText(**data))
+    print(ResultTextBase(**data))
 
 # functionally, contain every main in an li

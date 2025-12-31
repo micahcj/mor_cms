@@ -1,1 +1,4 @@
-["shid1", "default", ["default", "default", ["shid2"]], "default"]
+{
+	"json": [["shid1"], ["shid2", ["maneshid"]]],
+	"html": "<ul><li>shid1</li><li>shid2<ul><li>maneshid</li></ul></li></ul>"
+}
