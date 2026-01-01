@@ -116,52 +116,12 @@
 	});
 </script>
 
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
-
-<ul
-	class="content"
-	onchange={() => {
-		console.log($state.snapshot(textObjs));
-		console.log('serialized', serializeContent(textObjs));
-	}}
->
-	{#each textObjs as obj, i (obj.id)}
-		<div class="textbutton-container">
-			<div class="plus-minus">
-				<button onclick={() => addTextObj(i)}>+</button>
-				<button onclick={() => removeTextObj(i)}>-</button>
-			</div>
-			<TextButton bind:text={textObjs[i].text} bind:indentValue={textObjs[i].indentValue} />
-		</div>
-	{/each}
-</ul>
 <div class="result-text">
 	<h3>Result Text:</h3>
-	<ul class="listEle" bind:this={listEle}>
-		{#each resultText as item, i (i)}
-			{#if Array.isArray(item)}
-				<ul>
-					{#each item as sub}
-						<li>{sub}</li>
-					{/each}
-				</ul>
-			{:else}
-				<li class="solo">{item}</li>
-			{/if}
-		{/each}
-	</ul>
-	<p>{JSON.stringify(resultText)}</p>
-	{#if listEle}
-		<p>{listEle.innerHTML}</p>
-		<p>{listEle.outerHTML}</p>
-	{/if}
+	<div>{@html exportListHtmlPretty(treeNodes)}</div>
 	<button onclick={dlJson}>Save JSON</button>
 </div>
-<ListRenderer nodes={textObjs}></ListRenderer>
 <p>List ListRenderer2</p>
-<!-- <ListRenderer2 nodes={textObjs} onEdit={editText} onIndent={indent} onOutdent={outdent} /> -->
-// Update your ListRenderer2 usage to include onReorder:
 <ListRenderer2
 	nodes={treeNodes}
 	onEdit={editText}
