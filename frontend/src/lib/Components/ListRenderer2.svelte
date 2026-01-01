@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { TreeNode } from '$lib/static_resources2';
-	import { onMount } from 'svelte';
 
 	interface Props {
 		nodes: TreeNode[];
@@ -28,6 +27,7 @@
 	let dropPosition = $state<'before' | 'after' | null>(null);
 	let dragDirection = $state<'horizontal' | 'vertical' | null>(null);
 	let indentDirection = $state<'indent' | 'outdent' | null>(null);
+	let hoveredId = $state<string | null>(null);
 
 	function handleKey(e: KeyboardEvent) {
 		if (!selectedId) return;
@@ -60,6 +60,9 @@
 
 		if (!sharedDragState.dragFromId) return;
 
+		// Track which element we're hovering over
+		hoveredId = id;
+
 		// Calculate drag distance from start position
 		const dx = e.clientX - sharedDragState.startX;
 
@@ -84,12 +87,11 @@
 		}
 	}
 
-	function handleDragLeave(e: DragEvent) {
+	function handleDragLeave(e: DragEvent, id: string) {
 		e.stopPropagation();
-		// Only clear if we're leaving the actual target, not a child
-		if (e.currentTarget === e.target) {
-			dropTargetId = null;
-			dropPosition = null;
+		// Clear hover state when leaving
+		if (hoveredId === id) {
+			hoveredId = null;
 		}
 	}
 
@@ -134,6 +136,7 @@
 		dropPosition = null;
 		dragDirection = null;
 		indentDirection = null;
+		hoveredId = null;
 	}
 
 	function getDropIndicatorClass(nodeId: string): string {
@@ -142,17 +145,13 @@
 	}
 
 	function getIndentClass(nodeId: string): string {
+		// Always show current depth, update during drag
 		if (sharedDragState.dragFromId === nodeId && indentDirection) {
-			// Calculate target depth during drag
 			const targetDepth = indentDirection === 'indent' ? depth + 1 : Math.max(0, depth - 1);
 			return `depth-${targetDepth}`;
 		}
 		return `depth-${depth}`;
 	}
-
-	onMount(() => {
-		console.log('textobjs', $state.snapshot(nodes));
-	});
 </script>
 
 <ul>
@@ -162,13 +161,14 @@
 			tabindex="0"
 			class:selected={selectedId === node.id}
 			class:dragging={sharedDragState.dragFromId === node.id}
+			class:drag-target={hoveredId === node.id && sharedDragState.dragFromId !== node.id}
 			class:will-indent={sharedDragState.dragFromId === node.id && indentDirection === 'indent'}
 			class:will-outdent={sharedDragState.dragFromId === node.id && indentDirection === 'outdent'}
 			class={`${getDropIndicatorClass(node.id)} ${getIndentClass(node.id)}`}
 			onclick={() => (selectedId = node.id)}
 			ondragstart={(e) => handleDragStart(e, node.id)}
 			ondragover={(e) => handleDragOver(e, node.id)}
-			ondragleave={handleDragLeave}
+			ondragleave={(e) => handleDragLeave(e, node.id)}
 			ondrop={(e) => handleDrop(e, node.id)}
 			ondragend={handleDragEnd}
 			onkeydown={handleKey}
@@ -243,6 +243,17 @@
 	.dragging {
 		opacity: 0.5;
 		cursor: grabbing;
+	}
+
+	.drag-target {
+		background-color: #f0f4ff;
+		border-color: #9fb4ff;
+		box-shadow:
+			0 0 12px rgba(159, 180, 255, 0.6),
+			0 0 24px rgba(159, 180, 255, 0.3);
+		transition:
+			box-shadow 0.2s ease,
+			background-color 0.2s ease;
 	}
 
 	.will-indent {
