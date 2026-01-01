@@ -1,5 +1,6 @@
 <script lang="ts">
 	import ListRenderer from '$lib/Components/ListRenderer.svelte';
+	import ListRenderer2 from '$lib/Components/ListRenderer2.svelte';
 	import TextButton from '$lib/Components/TextButton.svelte';
 	import {
 		indentValues,
@@ -8,10 +9,11 @@
 		type TextObject
 	} from '$lib/static_resources';
 	import { exportListHtml } from '$lib/utilities';
+	import { onMount } from 'svelte';
 
 	const defaultTextObj: TextObject = { text: 'default', indentValue: 'Main' };
-
 	let resultText: Array<string | string[]> = $state([]);
+	// let resultText: Array<string | string[]> = $state([]);=  $derived(() => serializeContent(textObjs)); // = $state([]);
 	let textObjs: TextObject[] = $state([
 		{ text: 'shid1', indentValue: 'Main', id: crypto.randomUUID() },
 		{ text: 'shid2', indentValue: 'Main', id: crypto.randomUUID() }
@@ -36,17 +38,16 @@
 	}
 
 	$effect(() => {
-		console.log('state changed');
-		console.log($state.snapshot(textObjs));
+		// console.log('state changed');
+		// console.log($state.snapshot(textObjs));
 		console.log('serialized effect', serializeContent(textObjs));
 	});
-
 	$effect(() => {
 		resultText = serializeContent(textObjs);
 		if (listEle) {
 			console.log(listEle.innerHTML);
 		}
-		console.log(nodes);
+		console.log(nodes());
 	});
 
 	function dlJson() {
@@ -56,6 +57,35 @@
 		dlEle.setAttribute('download', 'resultText.json');
 		dlEle.click();
 	}
+	export function indentTextObject(list: TextObject[], id: string) {
+		return list.map((o) =>
+			o.id === id && o.indentValue === 'Main' ? { ...o, indentValue: 'Bullet' } : o
+		);
+	}
+
+	export function outdentTextObject(list: TextObject[], id: string) {
+		return list.map((o) =>
+			o.id === id && o.indentValue !== 'Main' ? { ...o, indentValue: 'Main' } : o
+		);
+	}
+
+	function editText(id: string, value: string) {
+		textObjs = textObjs.map((o) => (o.id === id ? { ...o, text: value } : o));
+	}
+
+	function indent(id: string) {
+		textObjs = indentTextObject(textObjs, id);
+	}
+
+	function outdent(id: string) {
+		textObjs = outdentTextObject(textObjs, id);
+	}
+
+	onMount(() => {
+		for (const i in nodes) {
+			console.log(i, 'node,', nodes[i]);
+		}
+	});
 </script>
 
 <h1>Welcome to SvelteKit</h1>
@@ -100,7 +130,9 @@
 	{/if}
 	<button onclick={dlJson}>Save JSON</button>
 </div>
-<ListRenderer nodes={nodes()}></ListRenderer>
+<ListRenderer nodes={textObjs}></ListRenderer>
+
+<ListRenderer2 {nodes} onEdit={editText} onIndent={indent} onOutdent={outdent} />
 <pre>{exportListHtml(nodes())}</pre>
 
 <style>

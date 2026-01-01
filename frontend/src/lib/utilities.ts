@@ -30,7 +30,7 @@ export function exportListHtml(tree: TreeNode): string {
 export function findNode(
 	nodes: TreeNode[],
 	id: string,
-	parent: TreeNode | null
+	parent: TreeNode | null = null
 ): { node: TreeNode; parent: TreeNode | null; index: number } | null {
 	for (let i = 0; i < nodes.length; i++) {
 		const node = nodes[i];
@@ -49,23 +49,44 @@ export function moveNodeById(
 	fromId: string,
 	toId: string,
 	position: 'before' | 'after'
-): TreeNode[] {
-	if (fromId === toId) return nodes;
-
+): { tree: TreeNode[] } | null {
 	const copy = structuredClone(nodes);
 	const from = findNode(copy, fromId);
 	const to = findNode(copy, toId);
-	if (!from || !to) return nodes;
+	if (!from || !to) return null;
 
 	const fromContainer = from.parent ? from.parent.children! : copy;
 	const [removed] = fromContainer.splice(from.index, 1);
 
 	const toContainer = to.parent ? to.parent.children! : copy;
 	const insertIndex = position === 'before' ? to.index : to.index + 1;
-
 	toContainer.splice(insertIndex, 0, removed);
-	return copy;
+
+	return { tree: copy };
 }
+
+// export function moveNodeById(
+// 	nodes: TreeNode[],
+// 	fromId: string,
+// 	toId: string,
+// 	position: 'before' | 'after'
+// ): TreeNode[] {
+// 	if (fromId === toId) return nodes;
+
+// 	const copy = structuredClone(nodes);
+// 	const from = findNode(copy, fromId);
+// 	const to = findNode(copy, toId);
+// 	if (!from || !to) return nodes;
+
+// 	const fromContainer = from.parent ? from.parent.children! : copy;
+// 	const [removed] = fromContainer.splice(from.index, 1);
+
+// 	const toContainer = to.parent ? to.parent.children! : copy;
+// 	const insertIndex = position === 'before' ? to.index : to.index + 1;
+
+// 	toContainer.splice(insertIndex, 0, removed);
+// 	return copy;
+// }
 
 export function indentNode(nodes: TreeNode[], id: string): TreeNode[] {
 	const copy = structuredClone(nodes);
@@ -99,4 +120,20 @@ export function outdentNode(nodes: TreeNode[], id: string): TreeNode[] {
 	parentContainer.splice(grand.index + 1, 0, found.node);
 
 	return copy;
+}
+
+export function getDepth(path: NodePath): number {
+	return path.length - 1;
+}
+
+export function canIndent(nodes: TreeNode[], id: string, maxDepth = 5): boolean {
+	const found = findNode(nodes, id);
+	if (!found) return false;
+	if (found.index === 0) return false;
+	return getDepth(found.path) < maxDepth;
+}
+
+export function canOutdent(nodes: TreeNode[], id: string): boolean {
+	const found = findNode(nodes, id);
+	return !!found?.parent;
 }

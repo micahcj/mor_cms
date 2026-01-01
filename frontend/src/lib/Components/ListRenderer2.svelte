@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { serializeContent, type TextObject, type TreeNode } from '$lib/static_resources';
-	import ListRenderer from './ListRenderer.svelte';
+	import type { TextObject, TreeNode } from '$lib/static_resources2';
+	import ListRenderer from './ListRenderer2.svelte';
 	import {
 		findNode,
 		indentNode,
@@ -8,21 +8,17 @@
 		moveNodeById,
 		canIndent,
 		canOutdent
-	} from '$lib/utilities';
-	import { onMount } from 'svelte';
+	} from '$lib/utiltities2';
 
 	interface Props {
 		nodes: TreeNode[];
 	}
 	let { nodes }: Props = $props();
 
-	// Drag state
+	let selectedId = $state<string | null>(null);
 	let dragFromId = $state<string | null>(null);
 	let dragIntent: 'indent' | 'outdent' | null = $state(null);
 	let startX = 0;
-
-	// Keyboard selection
-	let selectedId = $state<string | null>(null);
 
 	/* --------------------------
 	   KEYBOARD HANDLING
@@ -55,10 +51,10 @@
 	}
 
 	function moveRelative(dir: -1 | 1) {
-		const found = findNode(nodes, selectedId!);
+		const found = findNode($state.snapshot(nodes), selectedId!);
 		if (!found) return;
 
-		const container = found.parent ? found.parent.children! : nodes;
+		const container = found.parent?.children ?? nodes;
 		const target = container[found.index + dir];
 		if (!target) return;
 
@@ -68,7 +64,6 @@
 			target.id,
 			dir === -1 ? 'before' : 'after'
 		);
-		console.log('mutation', mutation);
 		if (mutation) nodes = mutation.tree;
 	}
 
@@ -84,31 +79,47 @@
 	}
 
 	function onDrop() {
-		if (!dragFromId) return;
+		if (!dragFromId || !dragIntent) return;
 
-		if (dragIntent === 'indent' && canIndent(nodes, dragFromId)) {
-			const mutation = indentNode(nodes, dragFromId);
-			if (mutation) nodes = mutation.tree;
-		}
-
-		if (dragIntent === 'outdent' && canOutdent(nodes, dragFromId)) {
-			const mutation = outdentNode(nodes, dragFromId);
-			if (mutation) nodes = mutation.tree;
-		}
-
+		applyDragMutation(dragFromId, dragIntent);
 		dragFromId = dragIntent = null;
 	}
 
-	function onDragStart(e: MouseEvent, id: TreeNode['id']) {
-		e.preventDefault();
-		dragFromId = id;
-		startX = e.clientX;
-		dragIntent = null;
+	function applyDragMutation(id: string, intent: 'indent' | 'outdent') {
+		nodes = intent === 'indent' ? indentTextObject(nodes, id) : outdentTextObject(nodes, id);
 	}
 
-	onMount(() => {
-		nodes.forEach((nod, i) => console.log(i, 'node,', nod));
-	});
+	export function indentTextObject(list: TextObject[], id: string) {
+		return list.map((o) =>
+			o.id === id && o.indentValue === 'Main' ? { ...o, indentValue: 'Bullet' } : o
+		);
+	}
+
+	export function outdentTextObject(list: TextObject[], id: string) {
+		return list.map((o) =>
+			o.id === id && o.indentValue !== 'Main' ? { ...o, indentValue: 'Main' } : o
+		);
+	}
+
+	// function onDrop() {
+	// 	if (!dragFromId) return;
+
+	// 	if (dragIntent === 'indent' && canIndent($state.snapshot(nodes), dragFromId)) {
+	// 		const mutation = indentNode($state.snapshot(nodes), dragFromId);
+	// 		if (mutation) nodes = mutation.tree;
+	// 	}
+
+	// 	if (dragIntent === 'outdent' && canOutdent($state.snapshot(nodes), dragFromId)) {
+	// 		const mutation = outdentNode($state.snapshot(nodes), dragFromId);
+	// 		if (mutation) nodes = mutation.tree;
+	// 	}
+
+	// 	dragFromId = dragIntent = null;
+	// }
+
+	function updateText(id: string, value: string) {
+		nodes = nodes.map((o) => (o.id === id ? { ...o, text: value } : o));
+	}
 </script>
 
 <div tabindex="0" onkeydown={handleKey}>
@@ -119,14 +130,24 @@
 				tabindex="0"
 				class:selected={selectedId === node.id}
 				onclick={() => (selectedId = node.id)}
-				ondragstart={(e) => onDragStart(e, node.id)}
+				ondragstart={(e) => {
+					dragFromId = node.id;
+					startX = e.clientX;
+					dragIntent = null;
+				}}
 				ondragover={onDragOver}
 				ondrop={onDrop}
 			>
-				{node.text}
 				<!-- Editable text -->
-				<!-- <input type="text" bind:value={node.text} oninput={() => (nodes = [...nodes])} /> -->
-
+				<!-- <input
+					type="text"
+					value={node.text}
+					oninput={(e) => {
+						node.text = (e.target as HTMLInputElement).value;
+						nodes = [...nodes]; // trigger reactivity
+					}}
+				/> -->
+				<input type="text" bind:value={node.text} oninput={() => (nodes = [...nodes])} />
 				<!-- Nested children -->
 				{#if node.children?.length}
 					<ListRenderer nodes={node.children} />
