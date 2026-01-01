@@ -1,6 +1,6 @@
-import type { TreeNode } from './static_resources';
+import type { TreeNode } from './static_resources2';
 
-function escapeHtml(text: string): string {
+export function escapeHtml(text: string): string {
 	return text
 		.replace(/&/g, '&amp;')
 		.replace(/</g, '&lt;')
@@ -9,22 +9,35 @@ function escapeHtml(text: string): string {
 		.replace(/'/g, '&#039;');
 }
 
-export function exportListHtml(tree: TreeNode): string {
-	function render(nodes: TreeNode[]): string {
-		return `<ul>${nodes
-			.map((node) => {
-				if (typeof node === 'string') {
-					return `<li>${escapeHtml(node)}</li>`;
-				}
+// export function exportListHtml(tree: TreeNode): string {
+// 	function render(nodes: TreeNode[]): string {
+// 		return `<ul>${nodes
+// 			.map((node) => {
+// 				if (typeof node === 'string') {
+// 					return `<li>${escapeHtml(node)}</li>`;
+// 				}
 
-				const [label, ...children] = node;
+// 				const [label, ...children] = node;
 
-				return `<li>${escapeHtml(label)}${children.length ? render(children) : ''}</li>`;
-			})
+// 				return `<li>${escapeHtml(label)}${children.length ? render(children) : ''}</li>`;
+// 			})
+// 			.join('')}</ul>`;
+// 	}
+
+// 	return render(tree);
+// }
+
+export function exportListHtml(nodes: TreeNode[]): string {
+	function render(list: TreeNode[]): string {
+		return `<ul>${list
+			.map(
+				(node) =>
+					`<li>${escapeHtml(node.text)}${node.children?.length ? render(node.children) : ''}</li>`
+			)
 			.join('')}</ul>`;
 	}
 
-	return render(tree);
+	return render(nodes);
 }
 
 export function findNode(
@@ -122,8 +135,22 @@ export function outdentNode(nodes: TreeNode[], id: string): TreeNode[] {
 	return copy;
 }
 
-export function getDepth(path: NodePath): number {
-	return path.length - 1;
+export function getDepth(nodes: TreeNode[], id: string): number {
+	const found = findNode(nodes, id);
+
+	if (!found) return 0;
+
+	// parent chain = depth
+	let depth = 0;
+	let current = found.parent;
+
+	while (current) {
+		depth++;
+		const parentFound = findNode(nodes, current.id);
+		current = parentFound?.parent ?? null;
+	}
+
+	return depth;
 }
 
 export function canIndent(nodes: TreeNode[], id: string, maxDepth = 5): boolean {

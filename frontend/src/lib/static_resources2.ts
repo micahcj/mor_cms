@@ -34,8 +34,7 @@ export function isMainContent(obj: TextObject): boolean {
 
 /**
  * Convert TextObject array to serialized nested array
- */
-export function serializeContent(content: TextObject[]): Array<Array<string | string[]>> {
+ */ export function serializeContent(content: TextObject[]): Array<Array<string | string[]>> {
 	const result: Array<Array<string | string[]>> = [];
 
 	let current: Array<string | string[]> | null = null;
@@ -55,7 +54,6 @@ export function serializeContent(content: TextObject[]): Array<Array<string | st
 
 	for (const obj of content) {
 		if (isMainContent(obj)) {
-			// finish previous main
 			if (current) {
 				flushBullets();
 				result.push(current);
@@ -64,7 +62,6 @@ export function serializeContent(content: TextObject[]): Array<Array<string | st
 			continue;
 		}
 
-		// bullets and sub-bullets
 		if (obj.indentValue === 'Bullet') {
 			if (subBullets.length) {
 				bullets.push(subBullets);
@@ -76,7 +73,10 @@ export function serializeContent(content: TextObject[]): Array<Array<string | st
 		}
 	}
 
-	if (current) flushBullets() && result.push(current);
+	if (current) {
+		flushBullets();
+		result.push(current);
+	}
 
 	return result;
 }

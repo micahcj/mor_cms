@@ -7,8 +7,17 @@
 		serializeContent,
 		type IndentValue,
 		type TextObject
-	} from '$lib/static_resources';
-	import { exportListHtml } from '$lib/utilities';
+	} from '$lib/static_resources2';
+	// import { exportListHtml } from '$lib/utilities2';
+	import {
+		indentNode,
+		outdentNode,
+		reorderNode,
+		textObjectsToTree,
+		treeToTextObjects,
+		exportListHtml,
+		exportListHtmlWithClasses
+	} from '$lib/utiltities2';
 	import { onMount } from 'svelte';
 
 	const defaultTextObj: TextObject = { text: 'default', indentValue: 'Main' };
@@ -38,20 +47,15 @@
 	}
 
 	$effect(() => {
-		// console.log('state changed');
-		// console.log($state.snapshot(textObjs));
-		console.log('serialized effect', serializeContent(textObjs));
-	});
-	$effect(() => {
 		resultText = serializeContent(textObjs);
-		if (listEle) {
-			console.log(listEle.innerHTML);
-		}
-		console.log(nodes());
 	});
 
 	function dlJson() {
-		const data = JSON.stringify({ json: resultText, html: exportListHtml(nodes()) });
+		const data = JSON.stringify({
+			json: resultText,
+			html: exportListHtml(treeNodes),
+			styledHtml: exportListHtmlWithClasses(treeNodes)
+		});
 		const dlEle = document.createElement('a');
 		dlEle.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(data));
 		dlEle.setAttribute('download', 'resultText.json');
@@ -69,16 +73,32 @@
 		);
 	}
 
-	function editText(id: string, value: string) {
-		textObjs = textObjs.map((o) => (o.id === id ? { ...o, text: value } : o));
+	let treeNodes = $derived(textObjectsToTree(textObjs));
+
+	// Update handlers to convert back to TextObject format
+	function reorder(fromId: string, toId: string, position: 'before' | 'after') {
+		const result = reorderNode($state.snapshot(treeNodes), fromId, toId, position);
+		if (result) {
+			textObjs = treeToTextObjects(result.tree);
+		}
 	}
 
 	function indent(id: string) {
-		textObjs = indentTextObject(textObjs, id);
+		const result = indentNode($state.snapshot(treeNodes), id);
+		if (result) {
+			textObjs = treeToTextObjects(result.tree);
+		}
 	}
 
 	function outdent(id: string) {
-		textObjs = outdentTextObject(textObjs, id);
+		const result = outdentNode($state.snapshot(treeNodes), id);
+		if (result) {
+			textObjs = treeToTextObjects(result.tree);
+		}
+	}
+
+	function editText(id: string, value: string) {
+		textObjs = textObjs.map((o) => (o.id === id ? { ...o, text: value } : o));
 	}
 
 	onMount(() => {
@@ -131,9 +151,18 @@
 	<button onclick={dlJson}>Save JSON</button>
 </div>
 <ListRenderer nodes={textObjs}></ListRenderer>
+<p>List ListRenderer2</p>
+<!-- <ListRenderer2 nodes={textObjs} onEdit={editText} onIndent={indent} onOutdent={outdent} /> -->
+// Update your ListRenderer2 usage to include onReorder:
+<ListRenderer2
+	nodes={treeNodes}
+	onEdit={editText}
+	onIndent={indent}
+	onOutdent={outdent}
+	onReorder={reorder}
+/>
 
-<ListRenderer2 {nodes} onEdit={editText} onIndent={indent} onOutdent={outdent} />
-<pre>{exportListHtml(nodes())}</pre>
+<pre>{exportListHtml(treeNodes)}</pre>
 
 <style>
 	.plus-minus {
