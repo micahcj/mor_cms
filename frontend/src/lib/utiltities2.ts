@@ -235,7 +235,7 @@ export function exportListHtmlPretty(nodes: TreeNode[], pretty: boolean = true):
 		let html = `${indent}<ul>${newline}`;
 
 		for (const node of list) {
-			html += `${indent}  <li>${escapeHtml(node.text)}`;
+			html += `${indent}<li>${escapeHtml(node.text)}`;
 
 			if (node.children?.length) {
 				html += `${newline}${render(node.children, depth + 2)}${indent}  `;
@@ -254,7 +254,7 @@ export function exportListHtmlPretty(nodes: TreeNode[], pretty: boolean = true):
 /**
  * Export with CSS classes for styling based on depth
  */
-export function exportListHtmlWithClasses(nodes: TreeNode[], pretty = true): string {
+export function exportListHtmlWithClasses(nodes: TreeNode[], pretty: boolean = true): string {
 	function render(list: TreeNode[], depth: number = 0): string {
 		const indent = pretty ? '  '.repeat(depth) : '';
 		const newline = pretty ? '\n' : '';
@@ -263,7 +263,7 @@ export function exportListHtmlWithClasses(nodes: TreeNode[], pretty = true): str
 		let html = `${indent}<ul class="${depthClass}">${newline}`;
 
 		for (const node of list) {
-			html += `${indent}  <li class="node-item">${escapeHtml(node.text)}`;
+			html += `${indent}<li class="node-item">${node.text}`;
 
 			if (node.children?.length) {
 				html += `${newline}${render(node.children, depth + 1)}${indent}  `;
@@ -278,7 +278,6 @@ export function exportListHtmlWithClasses(nodes: TreeNode[], pretty = true): str
 
 	return render(nodes, 0);
 }
-
 /**
  * Export to markdown format
  */
