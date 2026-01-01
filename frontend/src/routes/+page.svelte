@@ -15,8 +15,9 @@
 		reorderNode,
 		textObjectsToTree,
 		treeToTextObjects,
-		exportListHtml,
-		exportListHtmlWithClasses
+		exportListHtmlPretty,
+		exportListHtmlWithClasses,
+		makeChildOf
 	} from '$lib/utiltities2';
 	import { onMount } from 'svelte';
 
@@ -53,8 +54,8 @@
 	function dlJson() {
 		const data = JSON.stringify({
 			json: resultText,
-			html: exportListHtml(treeNodes),
-			styledHtml: exportListHtmlWithClasses(treeNodes)
+			html: exportListHtmlPretty(treeNodes, false),
+			styledHtml: exportListHtmlWithClasses(treeNodes, false)
 		});
 		const dlEle = document.createElement('a');
 		dlEle.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(data));
@@ -99,6 +100,13 @@
 
 	function editText(id: string, value: string) {
 		textObjs = textObjs.map((o) => (o.id === id ? { ...o, text: value } : o));
+	}
+
+	function makeChild(childId: string, parentId: string) {
+		const result = makeChildOf($state.snapshot(treeNodes), childId, parentId);
+		if (result) {
+			textObjs = treeToTextObjects(result.tree);
+		}
 	}
 
 	onMount(() => {
@@ -160,9 +168,10 @@
 	onIndent={indent}
 	onOutdent={outdent}
 	onReorder={reorder}
+	onMakeChild={makeChild}
 />
 
-<pre>{exportListHtml(treeNodes)}</pre>
+<pre>{exportListHtmlPretty(treeNodes)}</pre>
 
 <style>
 	.plus-minus {

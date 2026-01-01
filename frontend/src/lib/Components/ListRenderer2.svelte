@@ -7,6 +7,7 @@
 		onOutdent: (id: string) => void;
 		onEdit: (id: string, value: string) => void;
 		onReorder: (fromId: string, toId: string, position: 'before' | 'after') => void;
+		onMakeChild: (childId: string, parentId: string) => void;
 		// Props for coordinating drag state across recursive instances
 		sharedDragState?: { dragFromId: string | null; startX: number };
 		depth?: number;
@@ -18,6 +19,7 @@
 		onOutdent,
 		onEdit,
 		onReorder,
+		onMakeChild,
 		sharedDragState = $bindable({ dragFromId: null, startX: 0 }),
 		depth = 0
 	}: Props = $props();
@@ -28,6 +30,8 @@
 	let dragDirection = $state<'horizontal' | 'vertical' | null>(null);
 	let indentDirection = $state<'indent' | 'outdent' | null>(null);
 	let hoveredId = $state<string | null>(null);
+	let editingId = $state<string | null>(null);
+	let editValue = $state<string>('');
 
 	function handleKey(e: KeyboardEvent) {
 		if (!selectedId) return;
@@ -39,6 +43,33 @@
 				onIndent(selectedId);
 			}
 		}
+	}
+
+	function handleDoubleClick(node: TreeNode) {
+		editingId = node.id;
+		editValue = node.text;
+	}
+
+	function handleEditKeyDown(e: KeyboardEvent, id: string) {
+		if (e.key === 'Enter') {
+			e.preventDefault();
+			saveEdit(id);
+		} else if (e.key === 'Escape') {
+			cancelEdit();
+		}
+	}
+
+	function saveEdit(id: string) {
+		if (editValue.trim()) {
+			onEdit(id, editValue.trim());
+		}
+		editingId = null;
+		editValue = '';
+	}
+
+	function cancelEdit() {
+		editingId = null;
+		editValue = '';
 	}
 
 	function handleDragStart(e: DragEvent, id: string) {
@@ -110,9 +141,11 @@
 		const dx = e.clientX - sharedDragState.startX;
 
 		if (Math.abs(dx) > 24) {
-			// Horizontal drag - indent or outdent
+			// Horizontal drag - make child or outdent
 			if (dx > 24) {
-				onIndent(sharedDragState.dragFromId);
+				// Make the dragged item a child of the target
+				console.log('Making child:', sharedDragState.dragFromId, 'of', id);
+				onMakeChild(sharedDragState.dragFromId, id);
 			} else if (dx < -24) {
 				onOutdent(sharedDragState.dragFromId);
 			}
@@ -157,15 +190,17 @@
 <ul>
 	{#each nodes as node (node.id)}
 		<li
-			draggable="true"
+			draggable={editingId !== node.id}
 			tabindex="0"
 			class:selected={selectedId === node.id}
 			class:dragging={sharedDragState.dragFromId === node.id}
 			class:drag-target={hoveredId === node.id && sharedDragState.dragFromId !== node.id}
 			class:will-indent={sharedDragState.dragFromId === node.id && indentDirection === 'indent'}
 			class:will-outdent={sharedDragState.dragFromId === node.id && indentDirection === 'outdent'}
+			class:editing={editingId === node.id}
 			class={`${getDropIndicatorClass(node.id)} ${getIndentClass(node.id)}`}
 			onclick={() => (selectedId = node.id)}
+			ondblclick={() => handleDoubleClick(node)}
 			ondragstart={(e) => handleDragStart(e, node.id)}
 			ondragover={(e) => handleDragOver(e, node.id)}
 			ondragleave={(e) => handleDragLeave(e, node.id)}
@@ -174,7 +209,18 @@
 			onkeydown={handleKey}
 			onfocus={() => (selectedId = node.id)}
 		>
-			<span class="node-content">{node.text}</span>
+			{#if editingId === node.id}
+				<input
+					type="text"
+					class="edit-input"
+					bind:value={editValue}
+					onkeydown={(e) => handleEditKeyDown(e, node.id)}
+					onblur={() => saveEdit(node.id)}
+					autofocus
+				/>
+			{:else}
+				<span class="node-content">{node.text}</span>
+			{/if}
 
 			{#if node.children?.length}
 				<svelte:self
@@ -183,6 +229,7 @@
 					{onOutdent}
 					{onEdit}
 					{onReorder}
+					{onMakeChild}
 					bind:sharedDragState
 					depth={depth + 1}
 				/>
@@ -287,5 +334,26 @@
 	.node-content {
 		user-select: none;
 		display: inline-block;
+	}
+
+	.editing {
+		background-color: #fffef7;
+		border-color: #ffc107;
+	}
+
+	.edit-input {
+		width: 100%;
+		padding: 0.25rem 0.5rem;
+		border: 2px solid #ffc107;
+		border-radius: 4px;
+		font-size: inherit;
+		font-family: inherit;
+		background: white;
+		outline: none;
+	}
+
+	.edit-input:focus {
+		border-color: #ff9800;
+		box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
 	}
 </style>

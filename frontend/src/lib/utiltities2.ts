@@ -116,53 +116,53 @@ export function canOutdent(nodes: TreeNode[], id: string): boolean {
 /**
  * Move a node before or after another node (reordering)
  */
-export function reorderNode(
-	nodes: TreeNode[],
-	fromId: string,
-	toId: string,
-	position: 'before' | 'after'
-): TreeMutation | null {
-	if (fromId === toId) return null;
+// export function reorderNode(
+// 	nodes: TreeNode[],
+// 	fromId: string,
+// 	toId: string,
+// 	position: 'before' | 'after'
+// ): TreeMutation | null {
+// 	if (fromId === toId) return null;
 
-	const copy = structuredClone(nodes);
-	const from = findNode(copy, fromId);
-	const to = findNode(copy, toId);
+// 	const copy = structuredClone(nodes);
+// 	const from = findNode(copy, fromId);
+// 	const to = findNode(copy, toId);
 
-	if (!from || !to) return null;
+// 	if (!from || !to) return null;
 
-	// Can't move a parent into its own child
-	if (isAncestor(from.node, to.node)) return null;
+// 	// Can't move a parent into its own child
+// 	if (isAncestor(from.node, to.node)) return null;
 
-	// Remove from current location
-	const fromContainer = from.parent?.children ?? copy;
-	const [removed] = fromContainer.splice(from.index, 1);
+// 	// Remove from current location
+// 	const fromContainer = from.parent?.children ?? copy;
+// 	const [removed] = fromContainer.splice(from.index, 1);
 
-	// Find the target again after removal (indices may have shifted)
-	const toAfterRemoval = findNode(copy, toId);
-	if (!toAfterRemoval) return null;
+// 	// Find the target again after removal (indices may have shifted)
+// 	const toAfterRemoval = findNode(copy, toId);
+// 	if (!toAfterRemoval) return null;
 
-	// Insert at new location
-	const toContainer = toAfterRemoval.parent?.children ?? copy;
-	const insertIndex = position === 'before' ? toAfterRemoval.index : toAfterRemoval.index + 1;
+// 	// Insert at new location
+// 	const toContainer = toAfterRemoval.parent?.children ?? copy;
+// 	const insertIndex = position === 'before' ? toAfterRemoval.index : toAfterRemoval.index + 1;
 
-	toContainer.splice(insertIndex, 0, removed);
+// 	toContainer.splice(insertIndex, 0, removed);
 
-	return { tree: copy };
-}
+// 	return { tree: copy };
+// }
 
 /**
  * Check if a node is an ancestor of another node
  */
-function isAncestor(potentialAncestor: TreeNode, node: TreeNode): boolean {
-	if (!potentialAncestor.children) return false;
+// function isAncestor(potentialAncestor: TreeNode, node: TreeNode): boolean {
+// 	if (!potentialAncestor.children) return false;
 
-	for (const child of potentialAncestor.children) {
-		if (child.id === node.id) return true;
-		if (isAncestor(child, node)) return true;
-	}
+// 	for (const child of potentialAncestor.children) {
+// 		if (child.id === node.id) return true;
+// 		if (isAncestor(child, node)) return true;
+// 	}
 
-	return false;
-}
+// 	return false;
+// }
 
 // Add this to your static_resources2.ts or utilities2.ts
 
@@ -227,7 +227,7 @@ export function treeToTextObjects(nodes: TreeNode[], level: number = 0): TextObj
 	return result;
 }
 
-export function exportListHtml(nodes: TreeNode[], pretty: boolean = true): string {
+export function exportListHtmlPretty(nodes: TreeNode[], pretty: boolean = true): string {
 	function render(list: TreeNode[], depth: number = 0): string {
 		const indent = pretty ? '  '.repeat(depth) : '';
 		const newline = pretty ? '\n' : '';
@@ -254,24 +254,25 @@ export function exportListHtml(nodes: TreeNode[], pretty: boolean = true): strin
 /**
  * Export with CSS classes for styling based on depth
  */
-export function exportListHtmlWithClasses(nodes: TreeNode[]): string {
+export function exportListHtmlWithClasses(nodes: TreeNode[], pretty = true): string {
 	function render(list: TreeNode[], depth: number = 0): string {
-		const indent = '  '.repeat(depth);
+		const indent = pretty ? '  '.repeat(depth) : '';
+		const newline = pretty ? '\n' : '';
 		const depthClass = `depth-${depth}`;
 
-		let html = `${indent}<ul class="${depthClass}">\n`;
+		let html = `${indent}<ul class="${depthClass}">${newline}`;
 
 		for (const node of list) {
 			html += `${indent}  <li class="node-item">${escapeHtml(node.text)}`;
 
 			if (node.children?.length) {
-				html += `\n${render(node.children, depth + 1)}${indent}  `;
+				html += `${newline}${render(node.children, depth + 1)}${indent}  `;
 			}
 
-			html += `</li>\n`;
+			html += `</li>${newline}`;
 		}
 
-		html += `${indent}</ul>\n`;
+		html += `${indent}</ul>${newline}`;
 		return html;
 	}
 
@@ -298,4 +299,88 @@ export function exportListMarkdown(nodes: TreeNode[]): string {
 	}
 
 	return render(nodes, 0);
+}
+
+// Add this to your utilities2.ts file
+
+/**
+ * Move a node before or after another node (reordering)
+ */
+export function reorderNode(
+	nodes: TreeNode[],
+	fromId: string,
+	toId: string,
+	position: 'before' | 'after'
+): TreeMutation | null {
+	if (fromId === toId) return null;
+
+	// Convert to plain object to avoid Svelte proxy issues
+	const copy = JSON.parse(JSON.stringify(nodes)) as TreeNode[];
+	const from = findNode(copy, fromId);
+	const to = findNode(copy, toId);
+
+	if (!from || !to) return null;
+
+	// Can't move a parent into its own child
+	if (isAncestor(from.node, to.node)) return null;
+
+	// Remove from current location
+	const fromContainer = from.parent?.children ?? copy;
+	const [removed] = fromContainer.splice(from.index, 1);
+
+	// Find the target again after removal (indices may have shifted)
+	const toAfterRemoval = findNode(copy, toId);
+	if (!toAfterRemoval) return null;
+
+	// Insert at new location
+	const toContainer = toAfterRemoval.parent?.children ?? copy;
+	const insertIndex = position === 'before' ? toAfterRemoval.index : toAfterRemoval.index + 1;
+
+	toContainer.splice(insertIndex, 0, removed);
+
+	return { tree: copy };
+}
+
+/**
+ * Make a node a child of another node (drag to indent onto target)
+ */
+export function makeChildOf(
+	nodes: TreeNode[],
+	childId: string,
+	parentId: string
+): TreeMutation | null {
+	if (childId === parentId) return null;
+
+	const copy = JSON.parse(JSON.stringify(nodes)) as TreeNode[];
+	const child = findNode(copy, childId);
+	const parent = findNode(copy, parentId);
+
+	if (!child || !parent) return null;
+
+	// Can't move a parent into its own child
+	if (isAncestor(child.node, parent.node)) return null;
+
+	// Remove from current location
+	const fromContainer = child.parent?.children ?? copy;
+	const [removed] = fromContainer.splice(child.index, 1);
+
+	// Add as child of target (at the end)
+	parent.node.children = parent.node.children || [];
+	parent.node.children.push(removed);
+
+	return { tree: copy };
+}
+
+/**
+ * Check if a node is an ancestor of another node
+ */
+function isAncestor(potentialAncestor: TreeNode, node: TreeNode): boolean {
+	if (!potentialAncestor.children) return false;
+
+	for (const child of potentialAncestor.children) {
+		if (child.id === node.id) return true;
+		if (isAncestor(child, node)) return true;
+	}
+
+	return false;
 }
