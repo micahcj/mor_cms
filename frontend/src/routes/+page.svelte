@@ -116,22 +116,44 @@
 	});
 </script>
 
-<div class="result-text">
-	<h3>Result Text:</h3>
-	<div>{@html exportListHtmlPretty(treeNodes)}</div>
-	<button onclick={dlJson}>Save JSON</button>
+<div class="container">
+	<div class="box">
+		<div class="result-text">
+			<h3>Result Text:</h3>
+			<div>{@html exportListHtmlPretty(treeNodes)}</div>
+			<button onclick={dlJson}>Save JSON</button>
+		</div>
+		<p>List ListRenderer2</p>
+		<ListRenderer2
+			nodes={treeNodes}
+			onEdit={editText}
+			onIndent={indent}
+			onOutdent={outdent}
+			onReorder={reorder}
+			onMakeChild={makeChild}
+		/>
+	</div>
+	<div class="box">
+		<ul
+			class="content"
+			onchange={() => {
+				console.log($state.snapshot(textObjs));
+				console.log('serialized', serializeContent(textObjs));
+			}}
+		>
+			{#each textObjs as obj, i (obj.id)}
+				<div class="textbutton-container">
+					<div class="plus-minus">
+						<button onclick={() => addTextObj(i)}>+</button>
+						<button onclick={() => removeTextObj(i)}>-</button>
+					</div>
+					<TextButton bind:text={textObjs[i].text} bind:indentValue={textObjs[i].indentValue} />
+				</div>
+			{/each}
+		</ul>
+	</div>
+	<pre>{exportListHtmlPretty(treeNodes)}</pre>
 </div>
-<p>List ListRenderer2</p>
-<ListRenderer2
-	nodes={treeNodes}
-	onEdit={editText}
-	onIndent={indent}
-	onOutdent={outdent}
-	onReorder={reorder}
-	onMakeChild={makeChild}
-/>
-
-<pre>{exportListHtmlPretty(treeNodes)}</pre>
 
 <style>
 	.plus-minus {
@@ -174,5 +196,30 @@
 	.result-text .solo {
 		gap: 0;
 		list-style: none;
+	}
+
+	.container {
+		display: grid;
+		grid-template-columns: repeat(2, fr);
+		grid-template-rows: auto;
+	}
+	/* .container > div {
+		flex: 50%;
+	} */
+	.box {
+		border: 2px solid black;
+		margin: auto;
+		padding: 1rem;
+	}
+
+	pre {
+		/* font-family:
+			'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana,
+			sans-serif; */
+		grid-column: span 2;
+		display: flex;
+		margin: auto;
+		min-width: 10rem;
+		width: fit-content;
 	}
 </style>

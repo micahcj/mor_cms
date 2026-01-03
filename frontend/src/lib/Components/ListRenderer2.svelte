@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { TreeNode } from '$lib/static_resources2';
+	import ListRenderer2 from './ListRenderer2.svelte';
 
 	interface Props {
 		nodes: TreeNode[];
@@ -223,7 +224,7 @@
 			{/if}
 
 			{#if node.children?.length}
-				<svelte:self
+				<ListRenderer2
 					nodes={node.children}
 					{onIndent}
 					{onOutdent}
@@ -232,7 +233,17 @@
 					{onMakeChild}
 					bind:sharedDragState
 					depth={depth + 1}
-				/>
+				></ListRenderer2>
+				<!-- <svelte:self
+					nodes={node.children}
+					{onIndent}
+					{onOutdent}
+					{onEdit}
+					{onReorder}
+					{onMakeChild}
+					bind:sharedDragState
+					depth={depth + 1}
+				/> -->
 			{/if}
 		</li>
 	{/each}
@@ -265,18 +276,22 @@
 
 	li.depth-1 {
 		left: 2rem;
+		width: calc(100% - 3rem - 0.5rem - 0.25rem);
 	}
 
 	li.depth-2 {
 		left: 4rem;
+		width: calc(100% - 5rem - 0.5rem - 0.25rem);
 	}
 
 	li.depth-3 {
 		left: 6rem;
+		width: calc(100% - 6rem - 0.5rem - 0.25rem);
 	}
 
 	li.depth-4 {
 		left: 8rem;
+		width: calc(100% - 8rem);
 	}
 
 	li:hover {
@@ -342,7 +357,7 @@
 	}
 
 	.edit-input {
-		width: 100%;
+		/* width: 100%; */
 		padding: 0.25rem 0.5rem;
 		border: 2px solid #ffc107;
 		border-radius: 4px;
@@ -355,5 +370,9 @@
 	.edit-input:focus {
 		border-color: #ff9800;
 		box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
+	}
+
+	input {
+		width: calc(100% - 0.5rem - 0.25rem);
 	}
 </style>

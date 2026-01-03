@@ -43,7 +43,7 @@
 
 <style>
 	.outside {
-		position: absolute;
+		/* position: absolute; */
 		width: 100%;
 		height: auto;
 	}
