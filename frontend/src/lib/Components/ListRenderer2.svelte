@@ -186,6 +186,20 @@
 		}
 		return `depth-${depth}`;
 	}
+
+	function nodeIsHovered(e: Event) {
+		const ele = e.currentTarget;
+		return ele === document.activeElement;
+	}
+
+	function high(ele: HTMLElement, nodeID: string) {
+		if (!ele) return false;
+		const ids: string[] = [];
+		for (const { id } of nodes) {
+			ids.push(id);
+		}
+		const index = ids.indexOf(nodeID);
+	}
 </script>
 
 <ul>
@@ -209,32 +223,38 @@
 			ondragend={handleDragEnd}
 			onkeydown={handleKey}
 			onfocus={() => (selectedId = node.id)}
+			onmouseenter={() => (hoveredId = node.id)}
+			onmouseleave={() => (hoveredId = null)}
 		>
-			{#if editingId === node.id}
-				<input
-					type="text"
-					class="edit-input"
-					bind:value={editValue}
-					onkeydown={(e) => handleEditKeyDown(e, node.id)}
-					onblur={() => saveEdit(node.id)}
-					autofocus
-				/>
-			{:else}
-				<span class="node-content">{node.text}</span>
-			{/if}
+			<div class="li-container">
+				{#if !sharedDragState.dragFromId && hoveredId === node.id}
+					<div class="buttons"><button>+</button><button>-</button></div>
+				{/if}
+				{#if editingId === node.id}
+					<input
+						type="text"
+						class="edit-input"
+						bind:value={editValue}
+						onkeydown={(e) => handleEditKeyDown(e, node.id)}
+						onblur={() => saveEdit(node.id)}
+						autofocus
+					/>
+				{:else}
+					<span class="node-content">{node.text}</span>
+				{/if}
 
-			{#if node.children?.length}
-				<ListRenderer2
-					nodes={node.children}
-					{onIndent}
-					{onOutdent}
-					{onEdit}
-					{onReorder}
-					{onMakeChild}
-					bind:sharedDragState
-					depth={depth + 1}
-				></ListRenderer2>
-				<!-- <svelte:self
+				{#if node.children?.length}
+					<ListRenderer2
+						nodes={node.children}
+						{onIndent}
+						{onOutdent}
+						{onEdit}
+						{onReorder}
+						{onMakeChild}
+						bind:sharedDragState
+						depth={depth + 1}
+					></ListRenderer2>
+					<!-- <svelte:self
 					nodes={node.children}
 					{onIndent}
 					{onOutdent}
@@ -244,7 +264,8 @@
 					bind:sharedDragState
 					depth={depth + 1}
 				/> -->
-			{/if}
+				{/if}
+			</div>
 		</li>
 	{/each}
 </ul>
@@ -374,5 +395,16 @@
 
 	input {
 		width: calc(100% - 0.5rem - 0.25rem);
+	}
+
+	.buttons {
+		display: flex;
+		flex-direction: column;
+		width: min-content;
+	}
+	.li-container {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
 	}
 </style>
