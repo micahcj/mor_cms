@@ -2,8 +2,8 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Literal, Optional
-from backend.charts import create_bar_chart
-from backend.refactor_20251117_claude import (
+from charts import create_bar_chart
+from refactor_20251117_claude import (
     compile_aggregate_data,
     compile_monthly_data,
     compile_monthly_provider_data,
@@ -52,26 +52,32 @@ async def endpoint_highlights(request: Request):
 
 
 @app.post("/api/reload_barchart")
-def reload_chart():
-    maintest()
+async def reload_chart():
+    await maintest()
 
 
-def maintest():
-    sheets = "Dec"
+async def maintest():
+    sheets = ["Jan", "Feb"]
+    doc = "ADEYANJU, OLUWAKEMI E."
     with ThreadPoolExecutor(2) as executor:
         agg_data, month_data = executor.map(
             lambda fn: fn(sheets),
-            (compile_aggregate_data, compile_monthly_data),
+            (compile_provider_data, compile_monthly_provider_data),
         )
+        # agg_data, month_data = executor.map(
+        #     lambda fn: fn(sheets, "PrimaryCare", True, False),
+        #     (compile_aggregate_data, compile_monthly_data),
+        # )
     tableau_month = month_data["tableau"]
     tableau_agg = agg_data["tableau"]
-    for data in (tableau_month, tableau_agg):
-        print(data.loc["PrimaryCare"])
-    tableau = tableau_month.loc["PrimaryCare"]
+    # for data in (tableau_month, tableau_agg):
+    #     print(data.loc["PrimaryCare"])
+    # tableau = tableau_month.loc["PrimaryCare"]
+    tableau = tableau_month.loc[doc]
     create_bar_chart(
         tableau.loc["Decisions"].values,
         tableau.loc["Month"].values,
         "Tableau",
-        Path("tableau_bar.svg"),
+        Path("../frontend/src/public/content/tableau_bar.svg"),
         "Refills",
     )
