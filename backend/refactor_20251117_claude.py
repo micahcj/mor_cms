@@ -74,7 +74,7 @@ def compile_aggregate_data(
                 tableau_dict_interim,
                 colname,
             )
-    return _export_results(
+    _export_results(
         medproblems,
         tableau,
         sheets,
@@ -183,7 +183,6 @@ def _threaded_provider_roster_helper(path: Path, sheets: list[str]):
             )
             # locked_roster.add(df["Encounter Provider"])
         # return set(df["Encounter Provider"])
-        locked_roster.df_dict[sheet] = df
         return df["Encounter Provider"]
 
     with ThreadPoolExecutor(cores) as executor:
@@ -214,13 +213,7 @@ def _compile_provider_thread_helper(
     # ) -> Tuple[str, list[str], dict[str, list], dict[str, list]]:
 ) -> CompiledData:
     provider_colname = "Encounter Provider"
-
-    if not locked_roster:
-        print(f"Loading sheets for the first time in {__name__}")
-        df = _load_and_concat_sheets(filepath, [sheet])
-    else:
-        print("Loading sheet from locked_roster.df_dict.")
-        df = preprocess_df(locked_roster.df_dict[sheet])
+    df = _load_and_concat_sheets(filepath, [sheet])
     # locked_roster.add(df[provider_colname])
     # providers = [(x, [x]) for x in sorted(set(df[provider_colname]))]
     # providers = [(x, [x]) for x in locked_roster.roster]
@@ -300,7 +293,7 @@ def compile_monthly_data(
             for k, v in result.tableau.items():
                 tableau[k].extend(v if isinstance(v, list) else [v])
 
-    return _export_results(
+    _export_results(
         medproblems,
         tableau,
         sheets,
@@ -467,7 +460,7 @@ def _normalize_sheets(sheets: Optional[str | Collection[str]], filepath: Path):
         sheets = _normalize_str_input(sheets)
     else:
         months = (dt.datetime(2025, x, 1).strftime("%b") for x in range(1, 13))
-        available_sheets = pd.ExcelFile(filepath, engine="calamine").sheet_names
+        available_sheets = pd.ExcelFile(filepath).sheet_names
         return [x for x in months if x in available_sheets]
     return list(sheets)
 
@@ -685,7 +678,7 @@ def _export_results(
         )
 
         if export_data:
-            _export_excel_file(result_df, title, sheets, filter, mode)
+            _export_excel_file(result_df, title, sheets, filter)
 
         if export_pdf and title == "tableau":
             if not template_path:

@@ -110,23 +110,6 @@
 		}
 	}
 
-	async function reloadChart() {
-		await fetch('http://localhost:7001/api/reload_barchart', { method: 'POST' });
-	}
-
-	async function sendData() {
-		const url = new URL('http://localhost:7001/api/highlights');
-		const data = {
-			nodes: treeNodes,
-			objects: textObjs,
-			html: exportListHtmlPretty(treeNodes, false),
-			prettyHTML: exportListHtmlWithClasses(treeNodes, false)
-		};
-		const response = await fetch(url, { method: 'POST', body: JSON.stringify(data) });
-		const result = await response.json();
-		console.log('sendData result:', result);
-	}
-
 	onMount(() => {
 		for (const i in nodes) {
 			console.log(i, 'node,', nodes[i]);
@@ -140,8 +123,6 @@
 			<h3>Result Text:</h3>
 			<div>{@html exportListHtmlPretty(treeNodes)}</div>
 			<button onclick={dlJson}>Save JSON</button>
-			<button onclick={sendData}>Send JSON</button>
-			<button onclick={reloadChart}>Reload Barchart</button>
 		</div>
 		<p>List ListRenderer2</p>
 		<ListRenderer2
@@ -203,7 +184,7 @@
 
 		{#if graphs == 1}
 			<div class="one-graph">
-				<img class="graph" src="/src/public/content/tableau_bar.svg" />
+				<img class="graph" src="/src/public/content/bar.svg" />
 			</div>
 		{:else}
 			<div class="graphs">
