@@ -212,7 +212,7 @@
 		</div>
 		<div>
 			<div>
-				<p class="text-heading">Highlights</p>
+				<p class="text-heading">Highlights``</p>
 			</div>
 			{@html exportListHtmlPretty(treeNodes)}
 		</div>
