@@ -1,12 +1,19 @@
 from ast import Tuple
 from pathlib import Path
+from typing import NamedTuple
 from bs4 import XMLParsedAsHTMLWarning, BeautifulSoup as bs
 import warnings
+from pandas import DataFrame
 
 
 from charts import create_dual_bar_chart
 
 warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
+
+
+class CareGaps(NamedTuple):
+    appts: int = 0
+    labs: int = 0
 
 
 def fill_table(html: bs, data: list[list[str]], selector="#deferral-table"):
@@ -61,6 +68,13 @@ def insert_name(html: bs, name: str, selector="#name"):
     ele = html.select_one(selector)
     assert ele is not None
     ele.string = name
+
+
+def get_care_gaps(tableau: DataFrame, label: str) -> CareGaps:
+    df = tableau.loc[label]
+    appts = df.loc["Appts_Inclusive"].values[0]
+    labs = df.loc["Labs_Inclusive"].values[0]
+    return CareGaps(appts, labs)
 
 
 if __name__ == "__main__":

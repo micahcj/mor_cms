@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title></title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="">
+</head>
+<style>
+    /* Your updated CSS here */
+    :root {
+        --bg-color-main: navy;
+        --bg-color-secondary: rgba(121, 167, 247, 0.963);
+    }
+
+    .banner {
+        margin: auto;
+        background-color: var(--bg-color-main);
+        color: aliceblue;
+        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        text-align: center;
+    }
+
+    .name {
+        font-size: larger;
+        display: flex;
+        margin: auto;
+        justify-content: center;
+        align-items: center;
+
+        & h1 {
+            margin: 1rem 0;
+        }
+    }
+
+    .title {
+        margin: auto;
+        width: 20rem;
+        background-color: var(--bg-color-secondary);
+        color: aliceblue;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+        font-size: medium;
+        padding: 0;
+    }
+
+    h2 {
+        margin: 0;
+    }
+
+    .overview {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .data {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        width: 100%;
+        gap: 2rem;
+        margin: auto;
+        padding: 1rem;
+    }
+
+    .box {
+        display: flex;
+        flex-basis: 100%;
+        border: 1px solid black;
+        height: 100%;
+        width: 100%;
+
+        margin: auto;
+        max-width: 20rem;
+        padding: 0;
+        /* Removes any default padding inside the box */
+    }
+
+    .box img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .li-box {
+        display: grid;
+        grid-template-columns: 10rem 5rem;
+    }
+
+    .deferrals table {
+        margin: auto;
+        border: 1px solid black;
+        border-collapse: collapse;
+
+        td,
+        tr,
+        th,
+        thead {
+            border: 1px solid black;
+            padding: 0.5rem 1rem;
+            min-width: 5rem;
+        }
+    }
+
+    .center {
+        text-align: center;
+    }
+
+    .deferrals {
+        display: inline-grid;
+        grid-template-columns: 1fr;
+        margin: auto;
+        gap: 2rem;
+    }
+
+    .deferrals thead {
+        background-color: var(--bg-color-main);
+        color: aliceblue;
+    }
+
+    .same-width-element {
+        width: 100%;
+        margin: auto;
+    }
+
+    .value {
+        font-weight: 600;
+    }
+
+    svg {
+        height: 100%;
+        width: 100%;
+    }
+</style>
+<!-- <style>
+    :root {
+        --bg-color-main: blue;
+        --bg-color-secondary: navy
+    }
+
+    .banner {
+        margin: auto;
+        background-color: var(--bg-color-main);
+        color: alicevar(--bg-color-main);
+        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        text-align: center;
+
+    }
+
+    .name {
+        font-size: larger;
+        display: flex;
+        margin: auto;
+        justify-content: center;
+        align-items: center;
+
+        & h1 {
+            margin: 1rem 0;
+        }
+    }
+
+    .title {
+        margin: auto;
+        width: 20rem;
+        background-color: --bg-color-secondary;
+        color: alicevar(--bg-color-main);
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+        font-size: medium;
+        padding: 0;
+    }
+
+    h2 {
+        margin: 0;
+    }
+
+    .overview {
+        display: flex;
+    }
+
+    .data {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        width: 100%;
+        gap: 2rem;
+        margin: auto;
+        padding: 1rem;
+    }
+
+    .box {
+        border: 1px solid black;
+        aspect-ratio: 1/1;
+        min-width: fit-content;
+        width: 75%;
+        margin: auto;
+    }
+
+    .li-box {
+        display: grid;
+        grid-template-columns: 10rem 5rem;
+    }
+
+    .box img {
+        width: 100%;
+        /* Makes sure the image fills the entire box width */
+        height: 100%;
+        /* Makes sure the image fills the entire box height */
+        object-fit: cover;
+        /* Ensures the image covers the box without distorting its aspect ratio */
+    }
+
+    .deferrals table {
+        margin: auto;
+        border: 1px solid black;
+        border-collapse: collapse;
+
+        td,
+        tr,
+        th,
+        thead {
+            border: 1px solid black;
+            padding: 0.5rem 1rem;
+            min-width: 5rem;
+        }
+    }
+
+    .center {
+        text-align: center;
+    }
+
+    .deferrals {
+        display: inline-grid;
+        grid-template-columns: 1fr;
+        margin: auto;
+        gap: 2rem;
+
+    }
+
+    .deferrals thead {
+        background-color: var(--bg-color-main);
+        color: aliceblue
+    }
+
+    .same-width-element {
+        width: 100%;
+        margin: auto;
+    }
+</style> -->
+
+<body>
+    <div class="banner">
+        <div class="name">
+            <h1 id="name">NAME</h1>
+        </div>
+        <div class="title">
+            <h2>Refill Center 2025 Report Card</h2>
+        </div>
+    </div>
+    <div class="overview">
+        <h3>Overview:</h3>
+        <div class="data">
+            <div class="box">blah
+                <ul class="overview-list">
+                    <li>
+                        <div class="li-box">
+                            <span>Refills Completed</span>
+                            <span>XXXX</span>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="li-box">
+                            <span>Completed Same Day</span>
+                            <span>XXXX</span>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="li-box">
+                            <span>Approval Rate</span>
+                            <span>XXXX</span>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="li-box">
+                            <span>% Sent by Staff</span>
+                            <span>XXXX</span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            <div class="box image-container"><img src="./chart.png"></div>
+        </div>
+    </div>
+    <div class="deferrals">
+        <p class="same-width-element">Each message addressed by the Refill Center undergoes a number of checks, such as
+            last visit with you,
+            drug-drug
+            interactions, lab values, vitals, adherence, etc. The following items are the most common reasons we were
+            unable to take
+            care of refills in the background for you:</p>
+        <table id="deferral-table" class="same-width-element">
+            <thead>
+                <th class="center">Deferral Reason</th>
+                <th class="center">Messages</th>
+                <th class="center">% of Total</th>
+            </thead>
+            <tr>
+                <td>XXXXXXXXXXXX XXXXXXXXX XXXXXXXXXXX</td>
+                <td class="center">YYYY</td>
+                <td class="center">ZZZZ</td>
+            </tr>
+            <tr>
+                <td>XXXXXXXXXXXX XXXXXXXXX XXXXXXXXXXX</td>
+                <td class="center">YYYY</td>
+                <td class="center">ZZZZ</td>
+            </tr>
+            <tr>
+                <td>XXXXXXXXXXXX XXXXXXXXX XXXXXXXXXXX</td>
+                <td class="center">YYYY</td>
+                <td class="center">ZZZZ</td>
+            </tr>
+
+        </table>
+    </div>
+
+    <script src="" async defer></script>
+</body>
+
+</html>

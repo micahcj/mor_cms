@@ -117,7 +117,9 @@ class TableauTable:
     Defers_With_Route: int
     Defers_With_Route_Rate: float
     Appts: int
+    Appts_Inclusive: int
     Labs: int
+    Labs_Inclusive: int
     Same_Day: int
     Same_Day_Rate: float
     Mean_Message_Age: float
@@ -248,7 +250,30 @@ def compile_data(df: pd.DataFrame, month: str) -> TableauTable:
     staff_msgs: int | None = df.groupby("Message Source").size().get("Staff")  # type: ignore
     appts: int = df[appt_colname].sum(skipna=True)
     labs: int = df[lab_colname].sum(skipna=True)
-
+    appts_inclusive: int = (
+        df["Encounter CSN"]
+        .loc[
+            (
+                df[medproblems_colname]
+                .str.contains("Patient not seen by provider within 15 months", na=False)
+                .fillna(False)
+            )
+            | (pd.to_numeric(df[appt_colname], errors="coerce") == 1)
+        ]
+        .nunique()
+    )
+    labs_inclusive: int = (
+        df["Encounter CSN"]
+        .loc[
+            (
+                df[medproblems_colname]
+                .str.contains("labs outdated", na=False)
+                .fillna(False)
+            )
+            | (pd.to_numeric(df[lab_colname], errors="coerce") == 1)
+        ]
+        .nunique()
+    )
     if staff_msgs is None:
         staff_msgs = 0
     return TableauTable(
@@ -266,7 +291,9 @@ def compile_data(df: pd.DataFrame, month: str) -> TableauTable:
         defer_route,
         defer_route_rate,
         appts,
+        appts_inclusive,
         labs,
+        labs_inclusive,
         sameday,
         sameday_rate,
         mean_msg_age,
