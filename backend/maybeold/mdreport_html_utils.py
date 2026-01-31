@@ -1,9 +1,11 @@
 from ast import Tuple
+from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import NamedTuple
+from sys import platform
+import time
+from typing import Collection
 from bs4 import XMLParsedAsHTMLWarning, BeautifulSoup as bs
 import warnings
-from pandas import DataFrame
 
 
 from charts import create_dual_bar_chart
@@ -11,12 +13,19 @@ from charts import create_dual_bar_chart
 warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
 
 
-class CareGaps(NamedTuple):
-    appts: int = 0
-    labs: int = 0
+@dataclass
+class OverviewStats:
+    refills: int
+    sameday: str
+    approval: str
+    staff: str
+
+    @property
+    def dict(self):
+        return asdict(self)
 
 
-def fill_table(html: bs, data: list[list[str]], selector="#deferral-table"):
+def fill_table(html: bs, data: Collection[Collection[str]], selector="#deferral-table"):
     table = html.select_one(selector)
     assert table is not None
     for deferral_reason in data:
@@ -27,6 +36,19 @@ def fill_table(html: bs, data: list[list[str]], selector="#deferral-table"):
                 td["class"] = "center"
             tr.append(td)
         table.append(tr)
+    return html
+
+
+def fill_overview(html: bs, data: OverviewStats):
+    for id, value in data.dict.items():
+        ele_selector = f"#{id}"
+        ele = html.select_one(ele_selector)
+        try:
+            assert ele is not None
+            ele.string = str(value)
+        except AssertionError as e:
+            print(f"{e} --> {id}:{value}")
+
     return html
 
 
@@ -70,25 +92,32 @@ def insert_name(html: bs, name: str, selector="#name"):
     ele.string = name
 
 
-def get_care_gaps(tableau: DataFrame, label: str) -> CareGaps:
-    df = tableau.loc[label]
-    appts = df.loc["Appts_Inclusive"].values[0]
-    labs = df.loc["Labs_Inclusive"].values[0]
-    return CareGaps(appts, labs)
-
-
 if __name__ == "__main__":
-    html = parse_html_body(
-        r"C:\Users\Micah\Documents\CodeMe\mdReportCards2026\templateBeta.html"
+    template_path = (
+        Path("/Users/micah/Documents/CodeMe/mdreports2026/templateBeta2.html")
+        if platform == "darwin"
+        else Path(
+            r"C:\Users\Micah\Documents\CodeMe\mdReportCards2026\templateBeta.html"
+        )
     )
-    fill_table(html, [["1", "2", "3"], ["1", "2", "3"]], "#deferral-table")
-    fill_personal_stats(html, {"a": "123", "b": "345"})
+    html = parse_html_body(template_path)
+    fill_table(
+        html,
+        ((str(x) for x in range(x, x + 3)) for x in range(1, 4)),
+        "#deferral-table",
+    )  # type: ignore
+    # fill_table(html, [["1", "2", "3"], ["1", "2", "3"]], "#deferral-table")
+    # fill_personal_stats(html, {"a": "123", "b": "345"})
+    stats = OverviewStats(1240, "99%", "55%", "4%")
+    fill_overview(html, stats)
     svg = create_dual_bar_chart(
         [200, 1200], ["Labs", "Appts"], "Care Gaps", Path("dualbar2.svg")
     )
     insert_chart(html, svg, ".image-container")
-    insert_name(html, "gingerCuz")
-    export_path = Path("tableblah.html")
-    with open(export_path, "w") as file:
-        file.write(html.prettify())
-    print(export_path.absolute())
+    for name in ["1", "2", "3"]:
+        insert_name(html, name)
+        export_path = Path("tableblah_mac.html")
+        with open(export_path, "w") as file:
+            file.write(html.prettify())
+        # print(export_path.absolute())
+        # time.sleep(5)

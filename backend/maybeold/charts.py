@@ -1,6 +1,8 @@
 from pathlib import Path
 from typing import Any, Collection, List, Optional
+import matplotlib
 
+matplotlib.use("Agg")
 from matplotlib import pyplot as plt, ticker
 import matplotlib.patheffects as path_effects
 
@@ -127,10 +129,23 @@ def create_bar_chart(
             path_effects.withSimplePatchShadow(alpha=0.1, shadow_rgbFace="gray"),
         ]
     )
-    plt.savefig(export_path, format="svg")
+    plt.savefig(export_path, format="svg", transparent=True)
     with open(export_path, "r") as svg_file:
         svg_txt = svg_file.read()
         return svg_txt
+
+
+def set_y_ticks(max: int | float):
+    distance = max / 5
+    if distance <= 20:
+        ticks = 20
+    elif distance <= 50:
+        ticks = 50
+    elif distance <= 100:
+        ticks = 100
+    else:
+        ticks = 200
+    return range(ticks, 5 * ticks, ticks)
 
 
 def create_dual_bar_chart(
@@ -164,7 +179,7 @@ def create_dual_bar_chart(
         prop={"size": 12},
     )
     ax.yaxis.set_major_formatter(ticker.StrMethodFormatter("{x:,.0f}"))
-    ax.set_ylim(0, max(values) + 1)
+    ax.set_ylim(0, max(values) + 2 * ax.yaxis.get_tick_space())
     if x_label:
         ax.set_xlabel(x_label, fontsize=12)
     if y_label:
@@ -176,6 +191,17 @@ def create_dual_bar_chart(
             path_effects.withSimplePatchShadow(alpha=0.1, shadow_rgbFace="gray"),
         ]
     )
+    for x, y in enumerate(values):
+        # plt.text(x, y, f"{labels[x]}\n{y}", get_textbox_kwargs())
+        plt.text(x, y, f"{y}", get_textbox_kwargs())
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.spines["bottom"].set_visible(False)
+    ax.spines["left"].set_visible(False)
+    # for spine in ax.spines.values():
+    #     spine.set_visible(False)
+    ax.yaxis.grid(True)
+
     plt.savefig(export_path, format="svg")
     with open(export_path, "r") as svg_file:
         svg_txt = svg_file.read()

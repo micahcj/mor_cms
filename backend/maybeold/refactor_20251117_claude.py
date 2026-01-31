@@ -1,14 +1,11 @@
-from collections import defaultdict, namedtuple
+from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, wait
 from dataclasses import asdict
 from functools import partial
 import os
 from pathlib import Path
-from pprint import pprint
 from time import time
-from timeit import timeit
-from typing import Collection, NamedTuple, Optional, Set, Tuple
-from unittest import result
+from typing import Collection, NamedTuple, Optional
 from data_utils import get_departments, DepartmentKeys, timing
 import pandas as pd
 import datetime as dt
@@ -48,7 +45,8 @@ def compile_aggregate_data(
     medproblems: dict[str, list] = {}
     tableau: dict[str, list] = {}
     names = []
-    df = _threaded_load_and_concat_sheets(filepath, sheets)
+    df = _threaded_load_and_concat_sheets(filepath, sheets, export_data)
+    print(f"Concatenated {len(sheets)} sheets.")
     # if export_data:
     # df.to_excel(f"{sheets[0]}{sheets[-1]}-concat-export.xlsx")
     departments = get_departments(df[department_colname])
@@ -100,7 +98,7 @@ def compile_provider_data(
     medproblems: dict[str, list] = {}
     tableau: dict[str, list] = {}
     names = []
-    df = _threaded_load_and_concat_sheets(filepath, sheets)
+    df = _threaded_load_and_concat_sheets(filepath, sheets, export_data)
     providers = sorted(set(df[provider_colname]))
     for i, provider in enumerate(providers):
         _initialize_dept_data(medproblems, tableau, provider)
@@ -315,7 +313,8 @@ def compile_monthly_data(
 
 @timing
 def compile_monthly_provider_data(
-    sheets: Optional[str | Collection[str]],
+    sheets: Optional[str | Collection[str]] = None,
+    roster: Optional[str | Collection[str]] = None,
 ) -> dict[str, pd.DataFrame]:
     """Multithreaded approach"""
 
@@ -324,7 +323,10 @@ def compile_monthly_provider_data(
     title = "ProviderMonthly"
     print(title)
     # if export_data:
-    roster = _threaded_provider_roster_helper(filepath, sheets)
+    if isinstance(roster, str):
+        roster = roster.split(",")
+    if not roster:
+        roster = _threaded_provider_roster_helper(filepath, sheets)
     medproblems: dict[str, list] = {}
     tableau: dict[str, list] = {}
     names = []
@@ -519,6 +521,7 @@ def _threaded_load_and_concat_sheets(
         interim_dfs = [executor.submit(process_sheet, month) for month in sheets]
         wait(interim_dfs)
         interim_dfs = [future.result() for future in interim_dfs]
+    print("Preparing to concatenate", len(sheets), "sheets.")
     agg_df = pd.concat(interim_dfs)
     if export_data:
         print(f"Exporting aggregate df for {sheets}")
