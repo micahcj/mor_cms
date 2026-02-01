@@ -1,7 +1,9 @@
+from io import BytesIO
+import zipfile
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Literal, Optional
+from typing import Collection, List, Literal, Optional
 
 import pandas
 from mor_library.charts import create_bar_chart, create_dual_bar_chart
@@ -16,7 +18,7 @@ from mor_library.refactor_20251117_claude import (
 )
 from fastapi import FastAPI
 from fastapi.encoders import jsonable_encoder
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi import Request
 from fastapi.middleware.cors import CORSMiddleware
 import json
@@ -84,12 +86,29 @@ type FunctionParam = Optional[str | list[str]]
 def create_aggregate_report(
     depts: FunctionParam = ["PrimaryCare"], sheets: FunctionParam = None
 ):
-    return compile_aggregate_data(depts)
+    return compile_aggregate_data(sheets, depts, template_path="./html_templates/mor-2026-01-pc.html")
 
 
-@app.post("/api/agg_report", response_class=JSONResponse)
-async def agg_report(request: Request, dept: str):
-    return create_aggregate_report(dept)["paths"]
+def file_iterator(paths: Collection[Path]):
+    for path in paths:
+        with open(path, "rb") as f:
+            while chunk := f.read(8192):
+                yield chunk
+
+
+def zip_stream(paths: Collection[Path]):
+    buffer = BytesIO()
+    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as z:
+        for p in paths:
+            z.write(p, arcname=p)
+    buffer.seek(0)
+    yield from buffer
+
+
+@app.get("/api/agg_report", response_class=StreamingResponse)
+def agg_report(dept: str):
+    print('agg report')
+    return StreamingResponse(file_iterator(create_aggregate_report(dept)["paths"]))
 
 
 def maintest():

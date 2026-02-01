@@ -1,0 +1,24 @@
+{
+	"json": [
+		[
+			"Completed over 500,000 refills for Primary Care.",
+			[
+				"Approved 68% of refill requests in background. ",
+				[
+					"After implementing Care Team Office Visits in September, the team has been able to reduce deferrals for office visit by ~500 each month. ",
+					"Worked with IS to build logic to filter out blood pressures from inpatient and procedural visits to better align with Primary Care's use of outpatient blood pressure readings to assess control. "
+				]
+			]
+		],
+		[
+			"Thank you for partnering with us on the E-Consults to Pharmacy program in 2025. We addressed 1000 E-Consults for Primary Care. ",
+			[
+				"On average, 25 minutes were diverted from providers for each E-Consult, saving a total of 4000 provider hours in 2025. "
+			]
+		],
+		["default"],
+		["default"]
+	],
+	"html": "<ul><li>Completed over 500,000 refills for Primary Care.<ul><li>Approved 68% of refill requests in background. <ul><li>After implementing Care Team Office Visits in September, the team has been able to reduce deferrals for office visit by ~500 each month. </li><li>Worked with IS to build logic to filter out blood pressures from inpatient and procedural visits to better align with Primary Care&#039;s use of outpatient blood pressure readings to assess control. </li></ul>  </li></ul>  </li><li>Thank you for partnering with us on the E-Consults to Pharmacy program in 2025. We addressed 1000 E-Consults for Primary Care. <ul><li>On average, 25 minutes were diverted from providers for each E-Consult, saving a total of 4000 provider hours in 2025. </li></ul>  </li><li>default</li><li>default</li></ul>",
+	"styledHtml": "<ul class=\"depth-0\"><li class=\"node-item\">Completed over 500,000 refills for Primary Care.<ul class=\"depth-1\"><li class=\"node-item\">Approved 68% of refill requests in background. <ul class=\"depth-2\"><li class=\"node-item\">After implementing Care Team Office Visits in September, the team has been able to reduce deferrals for office visit by ~500 each month. </li><li class=\"node-item\">Worked with IS to build logic to filter out blood pressures from inpatient and procedural visits to better align with Primary Care's use of outpatient blood pressure readings to assess control. </li></ul>  </li></ul>  </li><li class=\"node-item\">Thank you for partnering with us on the E-Consults to Pharmacy program in 2025. We addressed 1000 E-Consults for Primary Care. <ul class=\"depth-1\"><li class=\"node-item\">On average, 25 minutes were diverted from providers for each E-Consult, saving a total of 4000 provider hours in 2025. </li></ul>  </li><li class=\"node-item\">default</li><li class=\"node-item\">default</li></ul>"
+}

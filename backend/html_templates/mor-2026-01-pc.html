@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Monthly Operating Report</title>
+    <link rel="stylesheet" href="./content/chatstyle.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Nanum+Pen+Script&display=swap"
+        rel="stylesheet">
+    <!-- <link
+			rel="stylesheet"
+			href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css"
+		/> -->
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            await document.fonts.ready;
+        });
+    </script>
+</head>
+
+<body>
+    <div class="container page">
+        <div class="heading">
+            <img class="logo" src="./content/logo.jpg" />
+            <div class="title">
+                <p>Ochsner Refill Center</p>
+                <p>Operational Report</p>
+            </div>
+            <div class="datebox">
+                <div class="date">
+                    <p>Date:</p>
+                    <p>August 2025</p>
+                </div>
+            </div>
+        </div>
+        <div class="graphs">
+            <img id="approval" class="graph" src="./content/approval.jpg" style="order: 1" />
+            <img id="tat" class="graph" src="./content/tat.jpg" style="order: 2" />
+        </div>
+        <div class="content">
+            <div class="metrics-box"></div>
+            <div>
+                <!-- <p class="text-heading">Updates and Reminders</p> -->
+                <p class="text-heading">Highlights</p>
+                <ul class="top">
+
+                    <li>Completed over 500,000 refills for Primary Care.<ul>
+                            <li class="subitem">Approved 68% of refill requests in background. <ul>
+                                    <li class="subitem">After implementing Care Team Office Visits in September, the
+                                        team has been able to reduce
+                                        deferrals for office visit by ~500 each month. </li>
+                                    <li class="subitem">Worked with IS to build logic to filter out blood pressures from
+                                        inpatient and procedural visits
+                                        to better align with Primary Care&#039;s use of outpatient blood pressure
+                                        readings to assess
+                                        control. </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="subitem">Thank you for partnering with us on the E-Consults to Pharmacy program in 2025.
+                        We addressed 1000 E-Consults for
+                        Primary Care. <ul>
+                            <li>On average, 25 minutes were diverted from providers for each E-Consult, saving a total
+                                of 4000 provider
+                                hours in 2025. </li>
+                        </ul>
+                    </li>
+                </ul>
+                </li>
+
+                <!-- <li>
+                        Please let us know if there are any new additions to your physician team. We're happy to onboard
+                        any physicians who aren't already enrolled.
+                    </li> -->
+                </ul>
+            </div>
+        </div>
+        <div class="footer-container">
+            <p class="text-heading">Questions or comments?</p>
+            <p class="foot-text">
+                Please send all inquiries to Micah
+                (micah.johnson@ochsner.org) or Andrew (andrew.burton@ochsner.org)
+            </p>
+        </div>
+    </div>
+
+</body>
+
+</html>

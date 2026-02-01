@@ -383,3 +383,12 @@ function isAncestor(potentialAncestor: TreeNode, node: TreeNode): boolean {
 
 	return false;
 }
+
+export async function aggregateReport(dept: string) {
+	const url = new URL('http://localhost:7001/api/agg_report');
+	url.searchParams.append('dept', dept);
+	const response = await fetch(url);
+	// const data = await response.json();
+	// console.log(data);
+	return response;
+}

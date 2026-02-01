@@ -17,23 +17,26 @@
 		treeToTextObjects,
 		exportListHtmlPretty,
 		exportListHtmlWithClasses,
-		makeChildOf
+		makeChildOf,
+		aggregateReport
 	} from '$lib/utiltities2';
 	import { onMount } from 'svelte';
+	import { v4 as uuid } from 'uuid';
 
 	let graphs = $state(1);
 	const defaultTextObj: TextObject = { text: 'default', indentValue: 'Main' };
 	let resultText: Array<string | string[]> = $state([]);
 	// let resultText: Array<string | string[]> = $state([]);=  $derived(() => serializeContent(textObjs)); // = $state([]);
-	let textObjs: TextObject[] = $state([
-		{ text: 'shid1', indentValue: 'Main', id: crypto.randomUUID() },
-		{ text: 'shid2', indentValue: 'Main', id: crypto.randomUUID() }
-	]);
+	const exObjs = [
+		{ text: 'shid1', indentValue: 'Main', id: uuid() },
+		{ text: 'shid2', indentValue: 'Main', id: uuid() }
+	];
+	let textObjs: TextObject[] = $state([...exObjs]);
 	let listEle: HTMLUListElement = $state();
 	let nodes: Node[] = $derived(() => serializeContent(textObjs));
 
 	function createTextObj(): TextObject {
-		return { ...defaultTextObj, id: crypto.randomUUID() };
+		return { ...defaultTextObj, id: uuid() };
 	}
 
 	function addTextObj(index: number) {
@@ -127,6 +130,24 @@
 		console.log('sendData result:', result);
 	}
 
+	async function requestReport(dept: string = 'PrimaryCare', download = true) {
+		console.log('requestReport');
+		const response = await aggregateReport(dept);
+		// for (const path of paths) {
+		console.log(response, download);
+		if (download) {
+			const dl = document.createElement('a');
+			const blob = await response.blob();
+			const url = window.URL.createObjectURL(blob);
+			console.log(url);
+			dl.href = url;
+			dl.click();
+			dl.remove();
+			URL.revokeObjectURL(url);
+		}
+	}
+	// }
+
 	onMount(() => {
 		for (const i in nodes) {
 			console.log(i, 'node,', nodes[i]);
@@ -142,6 +163,7 @@
 			<button onclick={dlJson}>Save JSON</button>
 			<button onclick={sendData}>Send JSON</button>
 			<button onclick={reloadChart}>Reload Barchart</button>
+			<button onclick={() => requestReport()}>PrimaryCare Report</button>
 		</div>
 		<p>List ListRenderer2</p>
 		<ListRenderer2

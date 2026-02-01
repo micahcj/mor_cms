@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Monthly Operating Report</title>
+    <link rel="stylesheet" href="./content/chatstyle.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Nanum+Pen+Script&display=swap"
+        rel="stylesheet">
+    <!-- <link
+			rel="stylesheet"
+			href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css"
+		/> -->
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            await document.fonts.ready;
+        });
+    </script>
+</head>
+
+<body>
+    <div class="container page">
+        <div class="heading">
+            <img class="logo" src="./content/logo.jpg" />
+            <div class="title">
+                <p>Ochsner Refill Center</p>
+                <p>Operational Report</p>
+            </div>
+            <div class="datebox">
+                <div class="date">
+                    <p>Date:</p>
+                    <p>August 2025</p>
+                </div>
+            </div>
+        </div>
+        <div class="graphs">
+            <img id="approval" class="graph" src="./content/approval.jpg" style="order: 1" />
+            <img id="tat" class="graph" src="./content/tat.jpg" style="order: 2" />
+        </div>
+        <div class="content">
+            <div class="metrics-box"></div>
+            <div>
+                <!-- <p class="text-heading">Updates and Reminders</p> -->
+                <p class="text-heading">Highlights</p>
+                <ul class="top">
+                    <li>
+                        E-Consult to Pharmacy Highlight
+
+                        <ul>
+                            <li class="subitem">
+                                <b>Prompt:</b> Patient presents with new onset atrial fibrillation. Requesting help
+                                selecting DOAC for patient based on patient-specific factors.
+                            </li>
+                            <li class="subitem">
+                                <b>Recommendation:</b> Direct oral anticoagulant (DOAC) is indicated for patient with
+                                new onset Afib. Given patient's age, SCr (<1.5), and weight (>60 kg), no dose adjustment
+                                    is recommended. Recommend to initiate
+                                    apixaban (Eliquis) 5 mg BID, which is covered as a Tier 3 medication on
+                                    the patient's insurance.
+                        </ul>
+                    </li>
+                    <li>
+                        To align with Primary Care’s transition to the Care Team model, we moved to the
+                        Care Team Office Visit protocol on Tuesday, September 16th
+                        <ul>
+                            <li class="subitem">
+                                Protocol will pass for:
+                                <p>Office visit with the PCP within 15 months
+                                    <br>
+                                <p style="text-indent: 2rem;"><b>OR</b></p>
+                                <!-- <br> -->
+                                <p>Office visit with the PCP within 24 months <i>AND</i> office visit
+                                    with a
+                                    member of
+                                    the PCP's Care Team within 12 months.</p>
+                            </li>
+                            <li class="subitem">Though there may be a change in the protocol text, there is effectively
+                                <b>NO CHANGE</b> for North Louisiana providers as
+                                the region is not currently using the PCP's Care Team functionality in Epic. Refills
+                                will still be assessed based on the last office visit with the listed PCP.
+                            </li>
+                            <li class="subitem"><img src="./content/careteam.png"></li>
+                        </ul>
+                    </li>
+                    <li>New COVID vaccines Comirnaty (Moderna) and Spikevax (Pfizer) have been approved
+                        by the FDA. Because the Advisory Committee on Immunization Practice (ACIP) has yet to review and
+                        recommend the vaccines, pharmacies are not allowed to dispense or administer these immunizations
+                        without a prescription.
+                        <ul>
+                            <li class="subitem">Both products have been updated and are available in Epic.</li>
+                            <li class="subitem">To prevent calls from pharmacy requesting substitution based on
+                                availability, one may add "May substitute with 2025 Comirnaty or Spikevax" in Notes to
+                                pharmacy section of the order.</li>
+                            <li class="subitem">The next planned ACIP meeting will be held September 18th-19th. There
+                                may be updates around this time.</li>
+                        </ul>
+                    </li>
+
+                </ul>
+                </li>
+
+                <!-- <li>
+                        Please let us know if there are any new additions to your physician team. We're happy to onboard
+                        any physicians who aren't already enrolled.
+                    </li> -->
+                </ul>
+            </div>
+        </div>
+        <div class="footer-container">
+            <p class="text-heading">Questions or comments?</p>
+            <p class="foot-text">
+                Please send all inquiries to Micah
+                (micah.johnson@ochsner.org) or Andrew (andrew.burton@ochsner.org)
+            </p>
+        </div>
+    </div>
+
+</body>
+
+</html>
