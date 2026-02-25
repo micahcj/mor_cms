@@ -34,6 +34,9 @@
 	let textObjs: TextObject[] = $state([...exObjs]);
 	let listEle: HTMLUListElement = $state();
 	let nodes: Node[] = $derived(() => serializeContent(textObjs));
+	let sheets: Array<string | number> = $state([]);
+	let year: number = $state(2026);
+	let files: File[] = [];
 
 	function createTextObj(): TextObject {
 		return { ...defaultTextObj, id: uuid() };
@@ -146,11 +149,47 @@
 			URL.revokeObjectURL(url);
 		}
 	}
-	// }
 
-	onMount(() => {
+	async function selectWorkbook(year: 2024 | 2025 | 2026) {
+		const url = new URL('http://localhost:7001/api/load_sheet');
+		const body = { year };
+		const response = await fetch(url, {
+			method: 'POST',
+			body: JSON.stringify(body),
+			headers: { 'Content-Type': 'application/json' }
+		});
+		console.log(body, JSON.stringify(body));
+		const sheetNames = await response.json();
+		console.log(sheetNames);
+		sheets = sheetNames;
+		return sheetNames;
+	}
+
+	async function sendWorkbook() {
+		const url = new URL('http://localhost:7001/api/upload_wb');
+		if (files) {
+			const formData = new FormData();
+			formData.append('file', files[0]);
+			const response = await fetch(url, {
+				method: 'POST',
+				body: formData
+				// headers: { 'Content-Type': files[0].type }
+			});
+			const result = await response.json();
+			console.log(result);
+		} else {
+			console.log('no files');
+		}
+	}
+
+	onMount(async () => {
 		for (const i in nodes) {
 			console.log(i, 'node,', nodes[i]);
+		}
+		try {
+			await selectWorkbook(year);
+		} catch (error) {
+			console.log(error);
 		}
 	});
 </script>
@@ -258,6 +297,19 @@
 			{@html exportListHtmlPretty(treeNodes)}
 		</div>
 	</div>
+</div>
+<div>
+	<select bind:value={year} onchange={() => selectWorkbook(year)}>
+		{#each [2024, 2025, 2026] as year (year)}
+			<option value={year}>{year}</option>
+		{/each}
+	</select>
+	<p>{sheets}</p>
+</div>
+<div>
+	<label for="template"> HTML Template </label>
+	<input type="file" id="template" bind:files />
+	<button onclick={sendWorkbook}>Upload</button>
 </div>
 <div><pre>{exportListHtmlPretty(treeNodes)}</pre></div>
 

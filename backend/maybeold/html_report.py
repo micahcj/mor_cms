@@ -1,7 +1,8 @@
 import os
 import json
 import sys
-from typing import Optional
+from typing import Literal, Optional
+import aiofiles
 import pandas as pd
 from bs4 import BeautifulSoup as bs
 from bs4.element import NavigableString
@@ -18,40 +19,33 @@ class PDFReporter(object):
     def __init__(
         self,
         name: str,
-        json_file: str,
-        html_template: str,
-        approval_graph,
-        tat_graph,
+        json_file: Optional[str],
+        approval_graph: Path,
+        tat_graph: Path,
         care_gaps: bool = False,
+        html_template: Optional[Path] = None,
+        html_string: Optional[str] = None,
     ) -> None:
         self.name = name
-        self.approval_graph: str = approval_graph
-        self.tat_graph: str = tat_graph
-        self.json_file: str = json_file
+        self.approval_graph = approval_graph
+        self.tat_graph = tat_graph
+        self.json_file = json_file or None
         self.care_gaps: bool = care_gaps
         self.html_template = html_template
-        self.html = self.parse_html_body(html_template)
+        if html_string:
+            self.html = self.parse_raw_html(html_string)
+        else:
+            if not html_template:
+                raise ValueError("No html provided.")
+            self.html = self.parse_html_file(html_template)
         self.html_report = f"{self.name}.html"
         self.pdf_report = f"{self.name}.pdf"
         self.json_obj: dict = {}
 
-    # @property
-    # # @cache
-    # def json_obj(self) -> dict:
-    #     if self.json_file:
-    #         with open(self.json_file, "r") as json_file:
-    #             self._json_obj = json.load(json_file)
-    #             return self._json_obj
-    #     else:
-    #         raise TypeError(
-    #             "TypeError: self.json_file is None. No file loaded because no path provided."
-    #         )
+    def parse_raw_html(self, txt: str):
+        return bs(txt, "html.parser")
 
-    # @json_obj.setter
-    # def json_obj(self, value):
-    #     self._json_obj = value
-
-    def parse_html_body(self, template: str | None):
+    def parse_html_file(self, template: Path):
         with open(template, encoding="utf8") as file:
             txt = file.read()
             html = bs(txt, "html.parser")
@@ -59,18 +53,21 @@ class PDFReporter(object):
         return html
 
     def sync_create_report(
-        self, populate_content: bool = False, template_path: str = None, new_text=False
+        self,
+        populate_content: bool = False,
+        template_path: Optional[Path] = None,
+        new_text=False,
     ):
         if template_path is None:
             if populate_content:
-                template_path = "./html_report_content.html"
-                self.html = self.parse_html_body(template_path)
+                template_path = Path("./html_report_content.html")
+                self.html = self.parse_html_file(template_path)
                 print("specialZ")
             else:
-                template_path = "./html_report.html"
+                template_path = Path("./html_report.html")
                 print("self.name is the name")
         else:
-            self.html = self.parse_html_body(template_path)
+            self.html = self.parse_html_file(template_path)
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
             page = browser.new_page()
@@ -101,7 +98,7 @@ class PDFReporter(object):
     def create_report(
         self,
         populate_content: bool = False,
-        template_path: str = None,
+        template_path: Optional[Path] = None,
         new_text=False,
         scale: Optional[float] = 0.95,
     ):
@@ -115,14 +112,21 @@ class PDFReporter(object):
             scale = 0.95
         if template_path is None:
             if populate_content:
-                template_path = "./html_report_content.html"
-                self.html = self.parse_html_body(template_path)
+                template_path = Path("./html_report_content.html")
+                self.html = self.parse_html_file(template_path)
                 print("specialZ")
             else:
-                template_path = "./html_report.html"
+                template_path = Path("./html_report.html")
                 print("self.name is the name")
         else:
-            self.html = self.parse_html_body(template_path)
+            self.html = self.parse_html_file(template_path)
+
+        async def run_html(playwright:Playwright,html:str):
+            browser = playwright.chromium
+            browser = await browser.launch()
+            context = await browser.new_context(base_url=Path("./").as_posix())
+            page = await context.new_page()
+            await page.set_content(html)
 
         async def run(playwright: Playwright):
             browser = playwright.chromium
@@ -141,7 +145,7 @@ class PDFReporter(object):
             # )
             filelink = filepath.resolve().as_uri()
             print(filelink)
-            await page.goto(filelink, wait_until="load")
+            # await page.goto(filelink, wait_until="load")
             await page.add_style_tag(path=Path("./content/styles.css"))
             await page.wait_for_load_state("load")
             # await page.emulate_media(media="screen")
@@ -205,7 +209,9 @@ class PDFReporter(object):
             else:
                 insert_tag("p", obj)
 
+        print(self.html.prettify())
         approval_img = self.html.find("img", {"id": "approval"})
+        # approval_img = self.html.find('#approval')
         approval_img["src"] = self.approval_graph
         tat_img = self.html.find("img", {"id": "tat"})
         tat_img["src"] = self.tat_graph
@@ -334,5 +340,6 @@ class PDFReporter(object):
         # loop = asyncio.get_event_loop()
         # loop.run_until_complete(playwright_helper())
         asyncio.run(playwright_helper())
+        # await playwright_helper()
 
     # def test(self):

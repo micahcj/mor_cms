@@ -1,9 +1,10 @@
+import asyncio
 from io import BytesIO
 import zipfile
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Collection, List, Literal, Optional
+from typing import Annotated, Collection, List, Literal, Optional
 
 import pandas
 from mor_library.charts import create_bar_chart, create_dual_bar_chart
@@ -16,13 +17,17 @@ from mor_library.refactor_20251117_claude import (
     compile_monthly_provider_data,
     compile_provider_data,
 )
-from fastapi import FastAPI
+from fastapi import FastAPI, File, UploadFile
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi import Request
 from fastapi.middleware.cors import CORSMiddleware
 import json
 from pandas import DataFrame
+from pydantic import BaseModel
+
+from maybeold.html_report import PDFReporter
+from maybeold.reporter import HTMLPDFReporter
 
 
 app = FastAPI()
@@ -86,7 +91,9 @@ type FunctionParam = Optional[str | list[str]]
 def create_aggregate_report(
     depts: FunctionParam = ["PrimaryCare"], sheets: FunctionParam = None
 ):
-    return compile_aggregate_data(sheets, depts, template_path="./html_templates/mor-2026-01-pc.html")
+    return compile_aggregate_data(
+        sheets, depts, template_path="./html_templates/mor-2026-01-pc.html"
+    )
 
 
 def file_iterator(paths: Collection[Path]):
@@ -107,8 +114,54 @@ def zip_stream(paths: Collection[Path]):
 
 @app.get("/api/agg_report", response_class=StreamingResponse)
 def agg_report(dept: str):
-    print('agg report')
+    print("agg report")
     return StreamingResponse(file_iterator(create_aggregate_report(dept)["paths"]))
+
+
+class SheetRequest(BaseModel):
+    year: int
+
+
+@app.post("/api/load_sheet", response_class=JSONResponse)
+async def load_wb(request: Request, sheet: SheetRequest):
+    print(request.headers)
+    if sheet.year not in {2024, 2025, 2026}:
+        raise ValueError(f"Year {sheet.year} not valid for function.")
+    filepath = Path(
+        rf"Y:\Backup\E\Reporting\Spreadsheets\Monthly\{sheet.year}\Tableau{sheet.year}.xlsx"
+    )
+    return [
+        x for x in pandas.ExcelFile(filepath, engine="calamine").sheet_names if x in []
+    ]
+
+
+@app.post("/api/upload_wb", response_class=JSONResponse)
+def receive_file(request: Request, file: UploadFile):
+    filebytes = BytesIO(asyncio.run(file.read()))
+    html = filebytes.getvalue().decode("utf-8")
+    svg_path = Path(
+        r"C:\Users\Micah\Documents\CodeMe\mor_cms-1\frontend\src\public\content\bar.svg"
+    )
+    # TODO: load wb and process the sheet(s) - all just to get approval and sameday rate
+    a = HTMLPDFReporter("test", html, 0.5, 0.2)
+    # a.run_async_playwright()
+    a.sync_playwright_wrapper()
+    # with open(svg_path,'r') as svg:
+    #     svg_bytes = svg.read()
+    # a = PDFReporter(
+    #     "test",
+    #     None,
+    #     svg_path,
+    #     svg_path,
+    #     False,
+    #     None,
+    #     html,
+    # )
+    # a.create_report()
+
+    # print(html)
+    print(bytes_len := len(filebytes.read()))
+    return bytes_len
 
 
 def maintest():
