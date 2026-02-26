@@ -37,7 +37,7 @@
 	let sheets: Array<string | number> = $state([]);
 	let year: number = $state(2026);
 	// svelte-ignore non_reactive_update
-	let files: Array<File> = [];
+	let files: FileList | undefined;
 	// svelte-ignore non_reactive_update
 	let customBody = false;
 	let uploadTemplate = $state(true);
@@ -202,7 +202,9 @@
 		const url = new URL('http://localhost:7001/api/upload_wb');
 		if (files) {
 			const formData = new FormData();
+
 			formData.append('file', files[0]);
+
 			formData.append(
 				'params',
 				JSON.stringify({
@@ -382,8 +384,14 @@
 	>
 		{#if sheets}
 			{#each sheets as sheetname (sheetname)}
-				<label for={`sheet-${sheetname}`}>{sheetname}</label>
-				<input name="sheet-radio" id={`sheet-${sheetname}`} type="radio" value={sheetname} />
+				<label for={`sheet-${sheetname}`}
+					><input
+						name="sheet-radio"
+						id={`sheet-${sheetname}`}
+						type="radio"
+						value={sheetname}
+					/>{sheetname}</label
+				>
 			{/each}
 			<br />
 		{/if}
@@ -557,5 +565,19 @@
 		margin: auto;
 		min-width: 10rem;
 		width: fit-content;
+	}
+	.sheets-select {
+		display: flex;
+		gap: 2px;
+		font-family: Arial, Helvetica, sans-serif;
+	}
+	.sheets-select label {
+		border: 2px solid black;
+		padding: 0.5rem;
+	}
+	.sheets-select label:has(input:checked) {
+		background-color: rgb(101, 191, 101);
+		color: white;
+		font-weight: 700;
 	}
 </style>
