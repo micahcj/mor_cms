@@ -36,8 +36,12 @@
 	let nodes: Node[] = $derived(() => serializeContent(textObjs));
 	let sheets: Array<string | number> = $state([]);
 	let year: number = $state(2026);
-	let files: File[] = [];
+	// svelte-ignore non_reactive_update
+	let files: Array<File> = [];
+	// svelte-ignore non_reactive_update
 	let customBody = false;
+	let uploadTemplate = $state(true);
+	let sheetsContainer: HTMLFormElement;
 
 	function createTextObj(): TextObject {
 		return { ...defaultTextObj, id: uuid() };
@@ -166,6 +170,34 @@
 		return sheetNames;
 	}
 
+	async function generateReport() {
+		if (uploadTemplate) {
+			await sendWorkbook();
+		} else {
+			await cmsReport();
+		}
+	}
+
+	async function cmsReport() {
+		const url = new URL('http://localhost:7001/api/report');
+		const formData = new FormData();
+		formData.append(
+			'params',
+			JSON.stringify({
+				year: year,
+				sheet: processRadioButtons(sheetsContainer, 'sheet-radio') ?? 'Jan',
+				depts: ['PrimaryCare'],
+				highlights_html: customBody ? exportListHtmlPretty(treeNodes) : null
+			})
+		);
+		const response = await fetch(url, {
+			method: 'POST',
+			body: formData
+		});
+		const result = await response.json();
+		console.log(result);
+	}
+
 	async function sendWorkbook() {
 		const url = new URL('http://localhost:7001/api/upload_wb');
 		if (files) {
@@ -175,7 +207,7 @@
 				'params',
 				JSON.stringify({
 					year: year,
-					sheet: 'Jan',
+					sheet: processRadioButtons(sheetsContainer, 'sheet-radio') ?? 'Jan',
 					depts: ['PrimaryCare'],
 					highlights_html: customBody ? exportListHtmlPretty(treeNodes) : null
 				})
@@ -189,6 +221,20 @@
 		} else {
 			console.log('no files');
 		}
+	}
+
+	function processCheckboxes(ele: HTMLDivElement) {
+		const values = [];
+		const checkboxes: HTMLInputElement[] = ele.querySelectorAll('input');
+		for (const chk of checkboxes) {
+			if (chk.checked) values.push(chk.value);
+		}
+		console.log(ele.id, values);
+		return values;
+	}
+
+	function processRadioButtons(containerEle: HTMLFormElement, name: string) {
+		return containerEle.elements[name]?.value;
 	}
 
 	onMount(async () => {
@@ -316,9 +362,10 @@
 	<p>{sheets}</p>
 </div>
 <div>
-	<label for="template"> HTML Template </label>
-	<input type="file" id="template" bind:files />
-	<button onclick={sendWorkbook}>Upload</button>
+	{#if uploadTemplate}
+		<label for="template"><input type="file" id="template" bind:files />HTML Template </label>
+	{/if}
+	<button onclick={generateReport}>Generate Report</button>
 	<label for="custom-body">Use Highlights</label>
 	<input
 		type="checkbox"
@@ -327,6 +374,27 @@
 		bind:checked={customBody}
 	/>
 </div>
+<div class="uggles">
+	<form
+		class="sheets-select"
+		bind:this={sheetsContainer}
+		onchange={() => console.log(processRadioButtons(sheetsContainer, 'sheet-radio'))}
+	>
+		{#if sheets}
+			{#each sheets as sheetname (sheetname)}
+				<label for={`sheet-${sheetname}`}>{sheetname}</label>
+				<input name="sheet-radio" id={`sheet-${sheetname}`} type="radio" value={sheetname} />
+			{/each}
+			<br />
+		{/if}
+	</form>
+	<label for="export-data"><input id="export-data" type="checkbox" />Export Data</label>
+
+	<label for="use-upload"
+		><input id="use-upload" type="checkbox" bind:checked={uploadTemplate} />Upload Template?</label
+	>
+</div>
+
 <div><pre>{exportListHtmlPretty(treeNodes)}</pre></div>
 
 <style>

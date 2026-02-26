@@ -1,5 +1,6 @@
 import asyncio
 from collections import defaultdict
+from datetime import datetime
 from io import BytesIO
 import zipfile
 from concurrent.futures import ThreadPoolExecutor
@@ -30,6 +31,10 @@ from pydantic import BaseModel
 from maybeold.html_report import PDFReporter
 from maybeold.reporter import HTMLPDFReporter, MonthExport, get_metrics_text
 
+
+TEMPLATE_PATH = Path(
+    r"C:\Users\Micah\Documents\CodeMe\mor_cms-1\backend\202601_PrimaryCare.html"
+)
 
 app = FastAPI()
 app.add_middleware(
@@ -123,17 +128,29 @@ class SheetRequest(BaseModel):
     year: int
 
 
+def get_filepath(year: int):
+    return Path(
+        rf"Y:\Backup\E\Reporting\Spreadsheets\Monthly\{year}\Tableau{year}.xlsx"
+    )
+
+
 @app.post("/api/load_sheet", response_class=JSONResponse)
 async def load_wb(request: Request, sheet: SheetRequest):
-    print(request.headers)
+    # print(request.headers)
     if sheet.year not in {2024, 2025, 2026}:
         raise ValueError(f"Year {sheet.year} not valid for function.")
     filepath = Path(
         rf"Y:\Backup\E\Reporting\Spreadsheets\Monthly\{sheet.year}\Tableau{sheet.year}.xlsx"
     )
-    return [
-        x for x in pandas.ExcelFile(filepath, engine="calamine").sheet_names if x in []
+
+    sheetnames = [
+        x
+        for x in pandas.ExcelFile(filepath, engine="calamine").sheet_names
+        if x
+        in [datetime(sheet.year, month, 1).strftime("%b") for month in range(1, 13)]
     ]
+    print(sheet.year, sheetnames, filepath.exists())
+    return sheetnames
 
 
 class UploadParams(BaseModel):
@@ -154,12 +171,13 @@ def receive_file(
     # highlights_html: Optional[str] = None,
 ):
     upload_params = UploadParams.model_validate_json(params)
-    print("highlights_html", upload_params.highlights_html)
+    print("highlights_html", upload_params)
+    print("fileepath", filepath := get_filepath(upload_params.year))
     filebytes = BytesIO(asyncio.run(file.read()))
     html = filebytes.getvalue().decode("utf-8")
-    month_data = compile_monthly_data(upload_params.sheet, None, False, False)[
-        "tableau"
-    ]
+    month_data = compile_monthly_data(
+        upload_params.sheet, None, False, False, filepath=filepath
+    )["tableau"]
     for dept in upload_params.depts:
         print(dept)
         dept_data = month_data.loc[dept]
@@ -177,6 +195,36 @@ def receive_file(
         a.sync_playwright_wrapper()
     print(bytes_len := len(filebytes.read()))
     return bytes_len
+
+
+@app.post("/api/report")
+def run_report(
+    request: Request,
+    params: str = Form("{}"),
+):
+    upload_params = UploadParams.model_validate_json(params)
+    print("highlights_html", upload_params.highlights_html)
+    with open(TEMPLATE_PATH, "r", encoding="utf-8") as template:
+        html = template.read()
+    print("fileepath", filepath := get_filepath(upload_params.year))
+    month_data = compile_monthly_data(
+        upload_params.sheet, None, False, False, filepath=filepath
+    )["tableau"]
+    for dept in upload_params.depts:
+        print(dept)
+        dept_data = month_data.loc[dept]
+        metrics = get_metrics_text(month_data, dept)
+        sameday_rate = dept_data.loc["Same_Day_Rate"].values[0]
+        approval_rate = dept_data.loc["Approval_Rate"].values[0]
+        a = HTMLPDFReporter(
+            "test",
+            html,
+            sameday_rate,
+            approval_rate,
+            metrics,
+            upload_params.highlights_html,
+        )
+        a.sync_playwright_wrapper()
 
 
 def maintest():
