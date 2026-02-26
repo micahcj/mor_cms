@@ -1,0 +1,65 @@
+{
+	// See https://go.microsoft.com/fwlink/?LinkId=733558
+	// for the documentation about the tasks.json format
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "FastAPI Dev",
+			"type": "shell",
+			// "command": "fastapi dev --reload --host '0.0.0.0'",
+			// "command": " uv run --active uvicorn main:app --host='0.0.0.0' --port=8000  --reload",
+			"command": "$env:PYTHON_GIL=0; uv run uvicorn main:app --host='0.0.0.0' --port=7001  --reload",
+			"options": { "cwd": "${workspaceFolder}/backend/" },
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "new",
+				"group": "groupA"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Svelte Dev",
+			"type": "shell",
+			"command": "npm run dev -- --host",
+			"options": { "cwd": "${workspaceFolder}/frontend" },
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "new",
+				"group": "groupA"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Svelte Dev (Mac)",
+			"type": "shell",
+			"command": "export VITE_POPBACKEND='http://192.168.0.248:8000' ; npm run dev -- --host",
+			"options": { "cwd": "${workspaceFolder}/app/ui" },
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "new",
+				"group": "groupA"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Start Both",
+			"dependsOn": ["FastAPI Dev", "Svelte Dev"]
+			// "group": {
+			// 	"kind": "build",
+			// 	"isDefault": true
+			// }
+		},
+		{
+			"label": "Start Both (Mac)",
+			"dependsOn": ["FastAPI Dev", "Svelte Dev (Mac)"],
+			"dependsOrder": "parallel",
+			"problemMatcher": []
+		}
+	]
+}

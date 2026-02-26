@@ -1,13 +1,16 @@
 import asyncio
+import base64
 from functools import cache
 from io import BytesIO
 from pathlib import Path
-from typing import NamedTuple, Tuple
+from typing import NamedTuple, Optional, Tuple, TypedDict
 import bs4
 from matplotlib import pyplot as plt
 import matplotlib.patheffects as path_effects
+import pandas as pd
 from playwright.async_api import async_playwright, Playwright
 from bs4 import XMLParsedAsHTMLWarning
+from bs4.element import NavigableString
 import warnings
 
 warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
@@ -20,7 +23,13 @@ BARGRAPH_PATH = Path(
 
 class HTMLPDFReporter:
     def __init__(
-        self, name: str, html: str, sameday_rate: float, approval_rate: float
+        self,
+        name: str,
+        html: str,
+        sameday_rate: float,
+        approval_rate: float,
+        metrics_text: list[str],
+        body_html: Optional[str] = None,
     ) -> None:
         self.name = name
         # self.html = html
@@ -28,6 +37,8 @@ class HTMLPDFReporter:
         self.bs = bs4.BeautifulSoup(html, "html.parser")
         self.sameday_rate = sameday_rate
         self.approval_rate = approval_rate
+        self.metrics_text = metrics_text
+        self.highlights_html = body_html
 
     @property
     def html(self):
@@ -59,18 +70,30 @@ class HTMLPDFReporter:
         context = await browser.new_context(base_url=Path("./").as_posix())
         page = await context.new_page()
         approval_graph, tat_graph = create_charts(self.sameday_rate, self.approval_rate)
+        approval_b64 = base64.b64encode(approval_graph.encode("utf-8")).decode("utf-8")
+        tat_b64 = base64.b64encode(tat_graph.encode("utf-8")).decode("utf-8")
         approval_img = self.bs.find("img", {"id": "approval"})
-        print(approval_img)
+        # print(approval_img)
         # approval_img.string = approval_graph
 
         # approval_img["src"] = approval_graph
         tat_img = self.bs.find("img", {"id": "tat"})
         # tat_img.string = tat_graph
-        # approval_img["src"] = f"data:image/svg+xml;utf8,{approval_graph}"
-        approval_img.replace_with(bs4.BeautifulSoup(approval_graph, "html.parser"))
-        tat_img.replace_with(bs4.BeautifulSoup(tat_graph, "html.parser"))
-        # tat_img["src"] = f"data:image/svg+xml;utf8,{tat_graph}"
+        approval_img["src"] = f"data:image/svg+xml;base64,{approval_b64}"
+        # approval_img.replace_with(bs4.BeautifulSoup(approval_graph, "html.parser"))
+        # tat_img.replace_with(bs4.BeautifulSoup(tat_graph, "html.parser"))
+        tat_img["src"] = f"data:image/svg+xml;base64,{tat_b64}"
         textheadings = self.bs.select(".items")
+        self.populate_metrics_div(self.metrics_text)
+        if self.highlights_html:
+            print(self.highlights_html)
+            highlights_cont = self.bs.select_one(".top")
+            if highlights_cont:
+                highlights_cont.replace_with(
+                    bs4.BeautifulSoup(self.highlights_html, "html.parser")
+                )
+            else:
+                raise ValueError("Highlights not found")
         await page.set_content(self.html)
         await page.wait_for_load_state("load")
         await page.pdf(
@@ -82,6 +105,24 @@ class HTMLPDFReporter:
         )
         print(self.pdf_path)
         return self.pdf_path
+
+    def populate_metrics_div(self, metrics_data: list[str]):
+        container = self.bs.select_one(".compressed-text")
+        if container:
+            container.clear()
+            for item in metrics_data:
+                ele = self.bs.new_tag("p")
+                item = str(item)
+                if " - " in item:
+                    name, number = item.split("-")
+                    ele.insert(0, NavigableString(name))
+                    b = self.bs.new_tag("b", string=NavigableString(number))
+                    ele.append(b)
+                else:
+                    ele.insert(0, NavigableString(item))
+                container.append(ele)
+        else:
+            raise ValueError("Container ele not found.")
 
 
 def create_charts(same_day_rate: float, approval_rate: float):
@@ -197,6 +238,13 @@ class Charts(NamedTuple):
     tat_graph: str
 
 
+# metrics = [
+#     int(result[key]["Decisions"]),
+#     f"{result[key]['Approval_Rate'] * 100:.1f}%",
+#     f"{result[key]['Same_Day_Rate'] * 100:.1f}%",
+# ]
+
+
 keys = [
     "Same_Day_Rate",
     "InScope_Requests",
@@ -204,3 +252,26 @@ keys = [
     "Decisions",
     "Approval_Rate",
 ]
+
+
+class MonthExport(TypedDict):
+    Same_Day_Rate: float
+    InScope_Requests: int
+    Handled_Messages: int
+    Decisions: int
+    Approval_Rate: float
+
+
+def get_metrics_text(tableau_data: pd.DataFrame, dept_name: str):
+    metrics = [
+        f"{tableau_data.loc[dept_name, 'Decisions'].values[0]:,}",
+        f"{tableau_data.loc[dept_name, 'Approval_Rate'].values[0]:.1%}",
+        f"{tableau_data.loc[dept_name, 'Same_Day_Rate'].values[0]:.1%}",
+    ]
+    metrics_labels = [
+        "Medication refills addressed - ",
+        "Percentage of refills handled by Refill Center - ",
+        "Percentage of encounters with 24H Turnaround Time - ",
+    ]
+    metrics_text = [str(x) + str(y) for x, y in zip(metrics_labels, metrics)]
+    return metrics_text

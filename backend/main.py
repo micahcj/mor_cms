@@ -1,4 +1,5 @@
 import asyncio
+from collections import defaultdict
 from io import BytesIO
 import zipfile
 from concurrent.futures import ThreadPoolExecutor
@@ -17,7 +18,7 @@ from mor_library.refactor_20251117_claude import (
     compile_monthly_provider_data,
     compile_provider_data,
 )
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi import Request
@@ -27,7 +28,7 @@ from pandas import DataFrame
 from pydantic import BaseModel
 
 from maybeold.html_report import PDFReporter
-from maybeold.reporter import HTMLPDFReporter
+from maybeold.reporter import HTMLPDFReporter, MonthExport, get_metrics_text
 
 
 app = FastAPI()
@@ -135,31 +136,45 @@ async def load_wb(request: Request, sheet: SheetRequest):
     ]
 
 
+class UploadParams(BaseModel):
+    year: int = 2026
+    sheet: str = "Jan"
+    depts: list[str] = ["PrimaryCare"]
+    highlights_html: Optional[str] = None
+
+
 @app.post("/api/upload_wb", response_class=JSONResponse)
-def receive_file(request: Request, file: UploadFile):
+def receive_file(
+    request: Request,
+    file: UploadFile,
+    params: str = Form("{}"),
+    # year: int = 2026,
+    # sheet: str = "Jan",
+    # depts: list[str] = ["PrimaryCare"],
+    # highlights_html: Optional[str] = None,
+):
+    upload_params = UploadParams.model_validate_json(params)
+    print("highlights_html", upload_params.highlights_html)
     filebytes = BytesIO(asyncio.run(file.read()))
     html = filebytes.getvalue().decode("utf-8")
-    svg_path = Path(
-        r"C:\Users\Micah\Documents\CodeMe\mor_cms-1\frontend\src\public\content\bar.svg"
-    )
-    # TODO: load wb and process the sheet(s) - all just to get approval and sameday rate
-    a = HTMLPDFReporter("test", html, 0.5, 0.2)
-    # a.run_async_playwright()
-    a.sync_playwright_wrapper()
-    # with open(svg_path,'r') as svg:
-    #     svg_bytes = svg.read()
-    # a = PDFReporter(
-    #     "test",
-    #     None,
-    #     svg_path,
-    #     svg_path,
-    #     False,
-    #     None,
-    #     html,
-    # )
-    # a.create_report()
-
-    # print(html)
+    month_data = compile_monthly_data(upload_params.sheet, None, False, False)[
+        "tableau"
+    ]
+    for dept in upload_params.depts:
+        print(dept)
+        dept_data = month_data.loc[dept]
+        metrics = get_metrics_text(month_data, dept)
+        sameday_rate = dept_data.loc["Same_Day_Rate"].values[0]
+        approval_rate = dept_data.loc["Approval_Rate"].values[0]
+        a = HTMLPDFReporter(
+            "test",
+            html,
+            sameday_rate,
+            approval_rate,
+            metrics,
+            upload_params.highlights_html,
+        )
+        a.sync_playwright_wrapper()
     print(bytes_len := len(filebytes.read()))
     return bytes_len
 

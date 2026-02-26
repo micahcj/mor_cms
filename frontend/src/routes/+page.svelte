@@ -37,6 +37,7 @@
 	let sheets: Array<string | number> = $state([]);
 	let year: number = $state(2026);
 	let files: File[] = [];
+	let customBody = false;
 
 	function createTextObj(): TextObject {
 		return { ...defaultTextObj, id: uuid() };
@@ -170,10 +171,18 @@
 		if (files) {
 			const formData = new FormData();
 			formData.append('file', files[0]);
+			formData.append(
+				'params',
+				JSON.stringify({
+					year: year,
+					sheet: 'Jan',
+					depts: ['PrimaryCare'],
+					highlights_html: customBody ? exportListHtmlPretty(treeNodes) : null
+				})
+			);
 			const response = await fetch(url, {
 				method: 'POST',
 				body: formData
-				// headers: { 'Content-Type': files[0].type }
 			});
 			const result = await response.json();
 			console.log(result);
@@ -310,6 +319,13 @@
 	<label for="template"> HTML Template </label>
 	<input type="file" id="template" bind:files />
 	<button onclick={sendWorkbook}>Upload</button>
+	<label for="custom-body">Use Highlights</label>
+	<input
+		type="checkbox"
+		id="custom-body"
+		onchange={() => console.log('checkbox', customBody)}
+		bind:checked={customBody}
+	/>
 </div>
 <div><pre>{exportListHtmlPretty(treeNodes)}</pre></div>
 
